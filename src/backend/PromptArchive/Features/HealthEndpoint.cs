@@ -1,6 +1,6 @@
 using FastEndpoints;
 
-namespace Magnetar.Features.Health;
+namespace PromptArchive.Features;
 
 public class HealthCheckEndpoint : EndpointWithoutRequest<HealthCheckResponse>
 {
