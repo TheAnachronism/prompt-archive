@@ -17,7 +17,7 @@ export interface RegisterCredentials {
     email: string;
     userName: string;
     password: string;
-    confirmPassword: string;
+    passwordConfirm: string;
 }
 
 const currentUser = ref<User | null>(null);

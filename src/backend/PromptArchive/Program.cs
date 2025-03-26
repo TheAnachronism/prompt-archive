@@ -1,6 +1,7 @@
 using FastEndpoints;
 using FastEndpoints.Security;
 using FastEndpoints.Swagger;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PromptArchive.Database;
@@ -19,7 +20,7 @@ try
 
     builder.Logging.ClearProviders();
     builder.Logging.AddSerilog();
-    
+
     builder.Services.AddSwaggerDocument()
         .AddEndpointsApiExplorer();
 
@@ -41,7 +42,19 @@ try
 
     builder.Services.AddAuthentication();
 
-    builder.Services.ConfigureApplicationCookie(o =>
+    builder.Services.AddAuthorization();
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("VueFrontend", p =>
+        {
+            p.WithOrigins("http://localhost:5173", "http://localhost:5174")
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+        });
+    });
+
+    var test = (CookieAuthenticationOptions o) =>
     {
         o.Cookie.HttpOnly = true;
         o.Cookie.SameSite = SameSiteMode.Strict;
@@ -54,24 +67,21 @@ try
 
         o.Events.OnRedirectToLogin = context =>
         {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            if (context.Request.Path.StartsWithSegments("/api"))
+            {
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                return Task.CompletedTask;
+            }
+
+            context.Response.Redirect(context.RedirectUri);
             return Task.CompletedTask;
         };
-    });
+    };
 
-    builder.Services.AddAuthorization();
-    builder.Services.AddCors(options =>
-    {
-        options.AddPolicy("VueFrontend", p =>
-        {
-            p.WithOrigins("http://localhost:5174")
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials();
-        });
-    });
-    
-    builder.Services.AddFastEndpoints();
+    builder.Services.ConfigureApplicationCookie(test);
+
+    builder.Services
+        .AddFastEndpoints();
 
     var app = builder.Build();
 

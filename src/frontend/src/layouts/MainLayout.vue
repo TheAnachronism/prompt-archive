@@ -184,7 +184,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import ToastProvider from '@/components/ToastProvider.vue';
+import { Toaster } from '@/components/ui/toast';
 import { Menu, User, FileText, Settings, LogOut } from 'lucide-vue-next';
 
 const router = useRouter();

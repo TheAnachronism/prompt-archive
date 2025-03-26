@@ -2,8 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { useAuth } from '@/utils/authService';
 import MainLayout from '@/layouts/MainLayout.vue';
 import HomeView from '@/pages/HomeView.vue';
-// import LoginPage from '@/pages/LoginPage.vue';
-// import RegisterPage from '@/pages/RegisterPage.vue';
+import LoginView from '@/pages/LoginView.vue';
+import RegisterView from '@/pages/RegisterView.vue';
 // import ForgotPasswordPage from '@/pages/ForgotPasswordPage.vue';
 
 const router = createRouter({
@@ -18,18 +18,18 @@ const router = createRouter({
           name: 'home',
           component: HomeView,
         },
-        // {
-        //   path: 'login',
-        //   name: 'login',
-        //   component: LoginPage,
-        //   meta: { guestOnly: true }
-        // },
-        // {
-        //   path: 'register',
-        //   name: 'register',
-        //   component: RegisterPage,
-        //   meta: { guestOnly: true }
-        // },
+        {
+          path: 'login',
+          name: 'login',
+          component: LoginView,
+          meta: { guestOnly: true }
+        },
+        {
+          path: 'register',
+          name: 'register',
+          component: RegisterView,
+          meta: { guestOnly: true }
+        },
         // {
         //   path: 'forgot-password',
         //   name: 'forgotPassword',

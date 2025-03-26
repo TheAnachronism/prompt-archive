@@ -1,5 +1,4 @@
 using FastEndpoints;
-using FluentValidation;
 using Microsoft.AspNetCore.Identity;
 using PromptArchive.Database;
 
@@ -45,10 +44,12 @@ public class RegisterEndpoint : Endpoint<RegisterRequest>
         if (!result.Succeeded)
         {
             foreach (var error in result.Errors) AddError(error.Description);
+            _logger.LogInformation("Could not create new user in sing-up: {errors}", result.Errors.Select(
+                x => x.Description));
             ThrowIfAnyErrors();
         }
 
-        await _signInManager.SignInAsync(user, isPersistent: false);
+        await _signInManager.SignInAsync(user, isPersistent: true);
 
         await SendAsync(new UserResponse(user.Id, user.Email, user.UserName), cancellation: ct);
     }
