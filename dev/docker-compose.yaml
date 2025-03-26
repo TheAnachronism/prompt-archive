@@ -1,0 +1,19 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: PromptArchive
+    ports:
+      - "5432:5432"
+    volumes:
+      - promptarchive-pg-data:/var/lib/postgresql/data
+
+volumes:
+  promptarchive-pg-data:
+
+
