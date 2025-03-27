@@ -1,3 +1,4 @@
+using System.Net;
 using FastEndpoints;
 using FastEndpoints.Security;
 using FastEndpoints.Swagger;
@@ -5,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using PromptArchive.Database;
+using PromptArchive.Features.Auth;
 using Serilog;
 using YamlDotNet.Serialization;
 
@@ -40,23 +42,11 @@ try
         .AddEntityFrameworkStores<ApplicationDbContext>()
         .AddDefaultTokenProviders();
 
-    builder.Services.AddAuthentication();
-
-    builder.Services.AddAuthorization();
-    builder.Services.AddCors(options =>
-    {
-        options.AddPolicy("VueFrontend", p =>
-        {
-            p.WithOrigins("http://localhost:5173", "http://localhost:5174")
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials();
-        });
-    });
-
-    var test = (CookieAuthenticationOptions o) =>
+    builder.Services.AddAuthentication(IdentityConstants.ApplicationScheme);
+    builder.Services.ConfigureApplicationCookie(o =>
     {
         o.Cookie.HttpOnly = true;
+        o.Cookie.Name = "PromptArchive.Auth";
         o.Cookie.SameSite = SameSiteMode.Strict;
         o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         o.ExpireTimeSpan = TimeSpan.FromDays(14);
@@ -76,12 +66,33 @@ try
             context.Response.Redirect(context.RedirectUri);
             return Task.CompletedTask;
         };
-    };
 
-    builder.Services.ConfigureApplicationCookie(test);
+        o.Events.OnRedirectToAccessDenied = context =>
+        {
+            if (context.Request.Path.StartsWithSegments("/api"))
+            {
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                return Task.CompletedTask;
+            }
 
-    builder.Services
-        .AddFastEndpoints();
+            context.Response.Redirect(context.RedirectUri);
+            return Task.CompletedTask;
+        };
+    });
+
+    builder.Services.AddAuthorization();
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("VueFrontend", p =>
+        {
+            p.WithOrigins("http://localhost:5173", "http://localhost:5174")
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+        });
+    });
+    
+    builder.Services.AddFastEndpoints();
 
     var app = builder.Build();
 
@@ -98,7 +109,6 @@ try
     app.UseHttpsRedirection();
     app.UseRouting();
     app.UseCors("VueFrontend");
-
     app.UseAuthentication();
     app.UseAuthorization();
 

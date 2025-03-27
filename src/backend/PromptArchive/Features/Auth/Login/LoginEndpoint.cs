@@ -1,4 +1,5 @@
 using FastEndpoints;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using PromptArchive.Database;
 
@@ -40,7 +41,7 @@ public class LoginEndpoint : Endpoint<LoginRequest, UserResponse>
             req.Password,
             req.RememberMe,
             false);
-
+        
         if (!result.Succeeded)
             ThrowError(FailureMessage);
 
