@@ -12,7 +12,7 @@ using PromptArchive.Database;
 namespace PromptArchive.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250326183613_Init")]
+    [Migration("20250327013437_Init")]
     partial class Init
     {
         /// <inheritdoc />
@@ -169,12 +169,18 @@ namespace PromptArchive.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("text");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Email")
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastLoginAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("boolean");

@@ -80,7 +80,8 @@ try
         };
     });
 
-    builder.Services.AddAuthorization();
+    builder.Services.AddAuthorization(o => { o.AddPolicy("Admin", p => { p.RequireRole("Admin"); }); });
+
     builder.Services.AddCors(options =>
     {
         options.AddPolicy("VueFrontend", p =>
@@ -91,7 +92,7 @@ try
                 .AllowCredentials();
         });
     });
-    
+
     builder.Services.AddFastEndpoints();
 
     var app = builder.Build();
