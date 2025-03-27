@@ -63,50 +63,7 @@
                         <Input type="search" placeholder="Search prompts..." class="w-[200px] md:w-[300px]" />
                     </div>
 
-                    <!-- User Profile / Auth -->
-                    <DropdownMenu v-if="isAuthenticated">
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" class="relative h-8 w-8 rounded-full">
-                                {{  currentUser?.initials || 'U' }}
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" class="w-56">
-                            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem @click="router.push('/profile')">
-                                <User class="mr-2 h-4 w-4" />
-                                <span>Profile</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem @click="router.push('/my-prompts')">
-                                <FileText class="mr-2 h-4 w-4" />
-                                <span>My Prompts</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem @click="router.push('/settings')">
-                                <Settings class="mr-2 h-4 w-4" />
-                                <span>Settings</span>
-                            </DropdownMenuItem>
-                            <div v-if="isAdmin">
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem @click="router.push('/admin/users')">
-                                    <Settings class="mr-2 h-4 w-4" />
-                                    <span>Admin Settings</span>
-                                </DropdownMenuItem>
-                            </div>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem @click="logout">
-                                <LogOut class="mr-2 h-4 w-4" />
-                                <span>Log out</span>
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                    <div v-else class="flex space-x-2">
-                        <Button variant="ghost" size="sm" @click="router.push('/login')">
-                            Login
-                        </Button>
-                        <Button variant="default" size="sm" @click="router.push('/register')">
-                            Sign Up
-                        </Button>
-                    </div>
+                    <UserMenu/>
                 </div>
             </div>
         </header>
@@ -189,6 +146,7 @@ import { Toaster } from '@/components/ui/toast';
 import { Menu, User, FileText, Settings, LogOut } from 'lucide-vue-next';
 import { useAuthStore } from '@/store/auth';
 import { computed } from 'vue';
+import UserMenu from "@/components/UserMenu.vue";
 
 const router = useRouter();
 const { currentUser, isAuthenticated, logout } = useAuth();

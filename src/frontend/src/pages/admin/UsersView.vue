@@ -16,10 +16,18 @@
                 </div>
                 <div class="flex items-center space-x-2">
                     <Select v-model="pageSize" @update:modelValue="loadUsers">
-                        <option value="5">5 per page</option>
-                        <option value="10">10 per page</option>
-                        <option value="25">25 per page</option>
-                        <option value="50">50 per page</option>
+                        <SelectTrigger class="w-[180px]">
+                            <SelectValue placeholder="Select page size"/>
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectGroup>
+                                <SelectLabel>Items per page</SelectLabel>
+                                <SelectItem value="5">5 per page</SelectItem>
+                                <SelectItem value="10">10 per page</SelectItem>
+                                <SelectItem value="25">25 per page</SelectItem>
+                                <SelectItem value="50">50 per page</SelectItem>
+                            </SelectGroup>
+                        </SelectContent>
                     </Select>
                 </div>
             </div>
@@ -133,19 +141,19 @@
                             <Input id="password" v-model="userForm.password" type="password"
                                 placeholder="Enter password" required />
                         </div>
+                        <div v-if="isEditing" class="flex items-center space-x-2">
+                            <Checkbox id="emailConfirmed" :model-value="userForm.emailConfirmed" />
+                            <Label for="emailConfirmed">Email Confirmed</Label>
+                        </div>
                         <div class="grid gap-2">
                             <Label for="roles">Roles</Label>
                             <div class="flex flex-wrap gap-2">
                                 <div v-for="role in availableRoles" :key="role" class="flex items-center space-x-2">
-                                    <Checkbox :id="`role-${role}`" :checked="userForm.roles.includes(role)"
-                                        @update:checked="toggleRole(role)" />
+                                    <Checkbox :id="`role-${role}`" :model-value="userForm.roles.includes(role)"
+                                        @update:model-value="toggleRole(role)" />
                                     <Label :for="`role-${role}`" class="cursor-pointer">{{ role }}</Label>
                                 </div>
                             </div>
-                        </div>
-                        <div v-if="isEditing" class="flex items-center space-x-2">
-                            <Checkbox id="emailConfirmed" v-model:checked="userForm.emailConfirmed" />
-                            <Label for="emailConfirmed">Email Confirmed</Label>
                         </div>
                     </div>
                     <DialogFooter>
@@ -265,7 +273,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Select } from '@/components/ui/select';
+import { Select, SelectTrigger, SelectContent, SelectGroup, SelectLabel, SelectItem, SelectValue } from '@/components/ui/select';
 import {
     PlusIcon,
     Search,

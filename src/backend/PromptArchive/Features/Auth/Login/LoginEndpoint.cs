@@ -45,6 +45,9 @@ public class LoginEndpoint : Endpoint<LoginRequest, UserResponse>
         if (!result.Succeeded)
             ThrowError(FailureMessage);
 
+        user.LastLoginAt = DateTime.UtcNow;
+        await _userManager.UpdateAsync(user);
+        
         var roles = await _userManager.GetRolesAsync(user);
 
         await SendOkAsync(new UserResponse(user.Id, user.Email!, user.UserName!, roles), ct);

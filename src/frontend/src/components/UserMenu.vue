@@ -1,37 +1,54 @@
-<!-- src/Frontend/src/components/UserMenu.vue -->
 <template>
-    <DropdownMenu>
-        <DropdownMenuTrigger as-child>
-            <Button variant="ghost" class="relative h-8 flex items-center space-x-2">
-                {{ userInitials }}
-                <span class="text-sm font-medium max-w-[100px] truncate">
-                    {{ user?.userName }}
-                </span>
+    <DropdownMenu v-if="isAuthenticated">
+        <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" class="relative h-8 w-8 rounded-full">
+                {{ currentUser?.userName.charAt(0) || 'U' }}
             </Button>
         </DropdownMenuTrigger>
-
         <DropdownMenuContent align="end" class="w-56">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem @click="router.push('/profile')">
-                Profile
+                <User class="mr-2 h-4 w-4" />
+                <span>Profile</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem @click="router.push('/my-prompts')">
+                <FileText class="mr-2 h-4 w-4" />
+                <span>My Prompts</span>
             </DropdownMenuItem>
             <DropdownMenuItem @click="router.push('/settings')">
-                Settings
+                <Settings class="mr-2 h-4 w-4" />
+                <span>Settings</span>
             </DropdownMenuItem>
+            <div v-if="isAdmin">
+                <DropdownMenuSeparator />
+                <DropdownMenuItem @click="router.push('/admin/users')">
+                    <Settings class="mr-2 h-4 w-4" />
+                    <span>Admin Settings</span>
+                </DropdownMenuItem>
+            </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem @click="handleLogout">
-                Logout
+                <LogOut class="mr-2 h-4 w-4" />
+                <span>Log out</span>
             </DropdownMenuItem>
         </DropdownMenuContent>
     </DropdownMenu>
+    <div v-else class="flex space-x-2">
+        <Button variant="ghost" size="sm" @click="router.push('/login')">
+            Login
+        </Button>
+        <Button variant="default" size="sm" @click="router.push('/register')">
+            Sign Up
+        </Button>
+    </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useToast } from '@/components/ui/toast';
-import { useAuth, type User } from '@/utils/authService';
+import { useAuth } from '@/utils/authService';
+import { useAuthStore } from '@/store/auth';
 import {
     DropdownMenu,
     DropdownMenuTrigger,
@@ -41,24 +58,17 @@ import {
     DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-
-const props = defineProps<{
-    user: User | null
-}>();
+import { computed } from 'vue';
+import { Menu, User, FileText, Settings, LogOut } from 'lucide-vue-next';
 
 const router = useRouter();
-const { logout } = useAuth();
+const { currentUser, logout, isAuthenticated } = useAuth();
+const authStore = useAuthStore();
 const { toast } = useToast();
 
-const userInitials = computed(() => {
-    if (!props.user || !props.user.userName) return '?';
-    return props.user.userName.charAt(0).toUpperCase();
-});
-
-const avatarUrl = computed(() => {
-    // Could be replaced with a real avatar URL from user profile
-    return 'undefined';
-});
+const isAdmin = computed(() => {
+    return authStore.user?.roles?.includes('Admin') || false;
+})
 
 const handleLogout = async () => {
     try {
