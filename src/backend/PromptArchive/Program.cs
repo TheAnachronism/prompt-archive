@@ -5,8 +5,11 @@ using FastEndpoints.Swagger;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
+using PromptArchive.Configuration;
 using PromptArchive.Database;
 using PromptArchive.Features.Auth;
+using PromptArchive.Services;
 using Serilog;
 using YamlDotNet.Serialization;
 
@@ -22,6 +25,13 @@ try
 
     builder.Logging.ClearProviders();
     builder.Logging.AddSerilog();
+
+    builder.Services.Configure<LocalStorageSettings>(builder.Configuration.GetSection("Storage:LocalStorage"));
+    builder.Services.Configure<S3StorageSettings>(builder.Configuration.GetSection("Storage:S3"));
+    builder.Services.AddHttpContextAccessor();
+    builder.Services.AddSingleton<S3StorageService>();
+    builder.Services.AddSingleton<LocalStorageSettings>();
+    builder.Services.AddSingleton(StorageServiceFactory.CreateStorageService);
 
     builder.Services.AddSwaggerDocument()
         .AddEndpointsApiExplorer();
@@ -112,6 +122,15 @@ try
     app.UseCors("VueFrontend");
     app.UseAuthentication();
     app.UseAuthorization();
+
+    app.UseStaticFiles();
+
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(
+            Path.Combine(builder.Environment.WebRootPath, "uploads/images")),
+        RequestPath = "/images"
+    });
 
     app.UseFastEndpoints(c =>
     {
