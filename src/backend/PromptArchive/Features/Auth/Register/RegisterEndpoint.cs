@@ -49,8 +49,18 @@ public class RegisterEndpoint : Endpoint<RegisterRequest>
             ThrowIfAnyErrors();
         }
 
-        await _signInManager.SignInAsync(user, isPersistent: true);
+        result = await _userManager.AddToRoleAsync(user, "User");
+        if (!result.Succeeded)
+        {
+            foreach (var error in result.Errors) AddError(error.Description);
+            _logger.LogInformation("Could not add user to 'User' role during  sing-up: {errors}", result.Errors.Select(
+                x => x.Description));
+            ThrowIfAnyErrors();
+        }
 
-        await SendAsync(new UserResponse(user.Id, user.Email, user.UserName), cancellation: ct);
+        await _signInManager.SignInAsync(user, isPersistent: true);
+        var roles = await _userManager.GetRolesAsync(user);
+
+        await SendAsync(new UserResponse(user.Id, user.Email, user.UserName, roles), cancellation: ct);
     }
 }

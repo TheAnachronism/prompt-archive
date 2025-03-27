@@ -90,6 +90,13 @@
                                 <Settings class="mr-2 h-4 w-4" />
                                 <span>Settings</span>
                             </DropdownMenuItem>
+                            <div v-if="isAdmin">
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem @click="router.push('/admin/users')">
+                                    <Settings class="mr-2 h-4 w-4" />
+                                    <span>Admin Settings</span>
+                                </DropdownMenuItem>
+                            </div>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem @click="logout">
                                 <LogOut class="mr-2 h-4 w-4" />
@@ -186,7 +193,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Toaster } from '@/components/ui/toast';
 import { Menu, User, FileText, Settings, LogOut } from 'lucide-vue-next';
+import { useAuthStore } from '@/store/auth';
+import { computed } from 'vue';
 
 const router = useRouter();
-const { currentUser, isAuthenticated } = useAuth();
+const { currentUser, isAuthenticated, logout } = useAuth();
+const authStore = useAuthStore();
+
+const isAdmin = computed(() => {
+    return authStore.user?.roles?.includes('Admin') || false;
+})
 </script>

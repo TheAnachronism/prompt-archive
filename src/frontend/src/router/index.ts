@@ -30,6 +30,21 @@ const router = createRouter({
           component: RegisterView,
           meta: { guestOnly: true }
         },
+        {
+          path: '/admin',
+          name: 'admin',
+          component: () => import('@/pages/admin/AdminLayout.vue'),
+          meta: { requiresAuth: true, requiresAdmin: true },
+          children: [
+            {
+              path: 'users',
+              name: 'admin-users',
+              component: () => import('@/pages/admin/UsersView.vue'),
+              meta: { requiresAuth: true, requiresAdmin: true }
+            },
+            // Add more admin routes as needed
+          ]
+        }
         // {
         //   path: 'forgot-password',
         //   name: 'forgotPassword',

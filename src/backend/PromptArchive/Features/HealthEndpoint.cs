@@ -13,8 +13,6 @@ public class HealthCheckEndpoint : EndpointWithoutRequest<HealthCheckResponse>
 
     public override Task HandleAsync(CancellationToken ct)
     {
-        Log.Information(string.Join(", ", HttpContext.Request.Cookies.Keys));
-        
         return SendAsync(new HealthCheckResponse
         {
             Status = "Healthy",

@@ -27,6 +27,8 @@ public class MeEndpoint : EndpointWithoutRequest<UserResponse>
             return;
         }
 
-        await SendOkAsync(new UserResponse(user.Id, user.Email!, user.UserName!), cancellation: ct);
+        var roles = await _userManager.GetRolesAsync(user);
+        
+        await SendOkAsync(new UserResponse(user.Id, user.Email!, user.UserName!, roles), cancellation: ct);
     }
 }

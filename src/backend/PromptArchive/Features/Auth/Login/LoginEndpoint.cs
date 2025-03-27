@@ -45,6 +45,8 @@ public class LoginEndpoint : Endpoint<LoginRequest, UserResponse>
         if (!result.Succeeded)
             ThrowError(FailureMessage);
 
-        await SendOkAsync(new UserResponse(user.Id, user.Email!, user.UserName!), ct);
+        var roles = await _userManager.GetRolesAsync(user);
+
+        await SendOkAsync(new UserResponse(user.Id, user.Email!, user.UserName!, roles), ct);
     }
 }

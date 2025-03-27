@@ -1,4 +1,4 @@
-namespace PromptArchive.Features.UserManagement.GetUser;
+namespace PromptArchive.Features.UserManagement;
 
 public class IdRequest
 {

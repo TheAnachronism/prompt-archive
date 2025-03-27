@@ -1,6 +1,7 @@
 using FastEndpoints;
 using Microsoft.AspNetCore.Identity;
 using PromptArchive.Database;
+using PromptArchive.Features.Auth;
 
 namespace PromptArchive.Features.UserManagement.GetUser;
 
