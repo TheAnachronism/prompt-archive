@@ -44,35 +44,35 @@ export const userService = {
         if (searchTerm) {
             params.append('searchTerm', searchTerm);
         }
-        const { data } = await api.get(`/users?${params.toString()}`);
+        const { data } = await api.get(`/manage/users?${params.toString()}`);
         return data;
     },
 
     getUser: async (id: string): Promise<User> => {
-        const { data } = await api.get(`/users/${id}`);
+        const { data } = await api.get(`/manage/users/${id}`);
         return data;
     },
 
     createUser: async (user: CreateUserRequest): Promise<User> => {
-        const { data } = await api.post('/users', user);
+        const { data } = await api.post('/manage/users', user);
         return data;
     },
 
     updateUser: async (id: string, user: UpdateUserRequest): Promise<User> => {
-        const { data } = await api.put(`/users/${id}`, user);
+        const { data } = await api.put(`/manage/users/${id}`, user);
         return data;
     },
 
     deleteUser: async (id: string): Promise<void> => {
-        await api.delete(`/users/${id}`);
+        await api.delete(`/manage/users/${id}`);
     },
 
     changePassword: async (request: ChangePasswordRequest): Promise<void> => {
-        await api.post('/users/change-password', request);
+        await api.post('/manage/users/change-password', request);
     },
 
     getRoles: async (): Promise<string[]> => {
-        const { data } = await api.get('/roles');
+        const { data } = await api.get('/manage/roles');
         return data;
     }
 };

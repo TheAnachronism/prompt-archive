@@ -17,7 +17,7 @@ public class ChangePasswordEndpoint : Endpoint<ChangePasswordRequest>
 
     public override void Configure()
     {
-        Post("users/change-password");
+        Post("manage/users/change-password");
         Policies("Admin");
     }
 

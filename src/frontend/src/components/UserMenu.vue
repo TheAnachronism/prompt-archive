@@ -3,12 +3,7 @@
     <DropdownMenu>
         <DropdownMenuTrigger as-child>
             <Button variant="ghost" class="relative h-8 flex items-center space-x-2">
-                <Avatar class="h-8 w-8">
-                    <AvatarImage :src="avatarUrl" />
-                    <AvatarFallback>
-                        {{ userInitials }}
-                    </AvatarFallback>
-                </Avatar>
+                {{ userInitials }}
                 <span class="text-sm font-medium max-w-[100px] truncate">
                     {{ user?.userName }}
                 </span>
@@ -45,7 +40,6 @@ import {
     DropdownMenuLabel,
     DropdownMenuSeparator
 } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 
 const props = defineProps<{
@@ -63,7 +57,7 @@ const userInitials = computed(() => {
 
 const avatarUrl = computed(() => {
     // Could be replaced with a real avatar URL from user profile
-    return '';
+    return 'undefined';
 });
 
 const handleLogout = async () => {

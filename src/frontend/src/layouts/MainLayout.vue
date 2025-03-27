@@ -67,12 +67,7 @@
                     <DropdownMenu v-if="isAuthenticated">
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" class="relative h-8 w-8 rounded-full">
-                                <Avatar>
-                                    <AvatarImage :src="currentUser?.avatar" alt="Profile" />
-                                    <AvatarFallback>
-                                        {{ currentUser?.initials || 'U' }}
-                                    </AvatarFallback>
-                                </Avatar>
+                                {{  currentUser?.initials || 'U' }}
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" class="w-56">
@@ -188,7 +183,6 @@ import {
     SheetTitle,
     SheetTrigger,
 } from '@/components/ui/sheet';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Toaster } from '@/components/ui/toast';

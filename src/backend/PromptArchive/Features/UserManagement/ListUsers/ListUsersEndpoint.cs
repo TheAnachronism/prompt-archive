@@ -36,6 +36,7 @@ public class ListUsersEndpoint : Endpoint<ListUsersRequewst, UserListResponse>
         var totalCount = await query.CountAsync(cancellationToken: ct);
 
         var users = await query
+            .OrderByDescending(x => x.CreatedAt)
             .Skip((req.Page - 1) * req.PageSize)
             .Take(req.PageSize)
             .ToListAsync(ct);

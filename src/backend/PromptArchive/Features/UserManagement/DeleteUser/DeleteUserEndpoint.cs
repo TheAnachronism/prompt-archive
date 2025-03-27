@@ -17,7 +17,7 @@ public class DeleteUserEndpoint : Endpoint<IdRequest>
 
     public override void Configure()
     {
-        Delete("users/{Id}");
+        Delete("manage/users/{Id}");
         Policies("Admin");
     }
 

@@ -18,7 +18,7 @@ public class GetRolesEndpoint : EndpointWithoutRequest<List<string>>
 
     public override void Configure()
     {
-        Get("roles");
+        Get("manage/roles");
         Policies("Admin");
     }
 

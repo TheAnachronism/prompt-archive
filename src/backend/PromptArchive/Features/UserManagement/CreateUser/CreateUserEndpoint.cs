@@ -18,7 +18,7 @@ public class CreateUserEndpoint : Endpoint<CreateUserRequest, UserDto>
 
     public override void Configure()
     {
-        Post("users");
+        Post("manage/users");
         Policies("Admin");
     }
 

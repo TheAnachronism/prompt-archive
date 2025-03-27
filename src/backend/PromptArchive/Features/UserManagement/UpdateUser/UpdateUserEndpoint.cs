@@ -17,7 +17,7 @@ public class UpdateUserEndpoint : Endpoint<UpdateUserRequest, UserDto>
 
     public override void Configure()
     {
-        Put("users/{Id}");
+        Put("manage/users/{Id}");
         Policies("Admin");
     }
 
