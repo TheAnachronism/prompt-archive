@@ -13,37 +13,6 @@
                         <NavigationMenu>
                             <NavigationMenuList>
                                 <NavigationMenuItem>
-                                    <NavigationMenuTrigger>Explore</NavigationMenuTrigger>
-                                    <NavigationMenuContent>
-                                        <ul class="grid gap-3 p-4 w-[400px]">
-                                            <li>
-                                                <NavigationMenuLink asChild>
-                                                    <router-link to="/popular"
-                                                        class="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
-                                                        <div class="text-sm font-medium leading-none">Popular</div>
-                                                        <p
-                                                            class="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                                                            Discover trending AI image prompts
-                                                        </p>
-                                                    </router-link>
-                                                </NavigationMenuLink>
-                                            </li>
-                                            <li>
-                                                <NavigationMenuLink asChild>
-                                                    <router-link to="/recent"
-                                                        class="block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground">
-                                                        <div class="text-sm font-medium leading-none">Recent</div>
-                                                        <p
-                                                            class="line-clamp-2 text-sm leading-snug text-muted-foreground">
-                                                            Browse the latest additions to our collection
-                                                        </p>
-                                                    </router-link>
-                                                </NavigationMenuLink>
-                                            </li>
-                                        </ul>
-                                    </NavigationMenuContent>
-                                </NavigationMenuItem>
-                                <NavigationMenuItem>
                                     <NavigationMenuLink asChild>
                                         <router-link to="/create"
                                             class="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50">
@@ -63,7 +32,7 @@
                         <Input type="search" placeholder="Search prompts..." class="w-[200px] md:w-[300px]" />
                     </div>
 
-                    <UserMenu/>
+                    <UserMenu />
                 </div>
             </div>
         </header>
@@ -114,9 +83,7 @@
     </div>
 </template>
 
-<script setup>
-import { useRouter } from 'vue-router';
-import { useAuth } from '@/utils/authService';
+<script setup lang="ts">
 import {
     NavigationMenu,
     NavigationMenuContent,
@@ -125,14 +92,6 @@ import {
     NavigationMenuList,
     NavigationMenuTrigger,
 } from '@/components/ui/navigation-menu';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
     Sheet,
     SheetContent,
@@ -143,16 +102,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Toaster } from '@/components/ui/toast';
-import { Menu, User, FileText, Settings, LogOut } from 'lucide-vue-next';
-import { useAuthStore } from '@/store/auth';
-import { computed } from 'vue';
+import { Menu } from 'lucide-vue-next';
 import UserMenu from "@/components/UserMenu.vue";
-
-const router = useRouter();
-const { currentUser, isAuthenticated, logout } = useAuth();
-const authStore = useAuthStore();
-
-const isAdmin = computed(() => {
-    return authStore.user?.roles?.includes('Admin') || false;
-})
 </script>

@@ -8,10 +8,6 @@
         <DropdownMenuContent align="end" class="w-56">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem @click="router.push('/profile')">
-                <User class="mr-2 h-4 w-4" />
-                <span>Profile</span>
-            </DropdownMenuItem>
             <DropdownMenuItem @click="router.push('/my-prompts')">
                 <FileText class="mr-2 h-4 w-4" />
                 <span>My Prompts</span>
@@ -59,7 +55,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { computed } from 'vue';
-import { Menu, User, FileText, Settings, LogOut } from 'lucide-vue-next';
+import { User, FileText, Settings, LogOut } from 'lucide-vue-next';
 
 const router = useRouter();
 const { currentUser, logout, isAuthenticated } = useAuth();
