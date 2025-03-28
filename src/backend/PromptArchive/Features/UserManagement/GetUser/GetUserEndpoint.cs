@@ -18,7 +18,7 @@ public class GetUserEndpoint : Endpoint<IdRequest, UserDto>
 
     public override void Configure()
     {
-        Get("manage/users/{Id}");
+        Get("manage/usersasdf/{Id}");
         Policies("Admin");
     }
 

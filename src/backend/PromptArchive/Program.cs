@@ -26,6 +26,10 @@ try
     builder.Logging.ClearProviders();
     builder.Logging.AddSerilog();
 
+    var localUploadsDirectory = Path.Combine(builder.Environment.WebRootPath, "uploads/images");
+    if(!Directory.Exists(localUploadsDirectory))
+        Directory.CreateDirectory(localUploadsDirectory);
+    
     builder.Services.Configure<LocalStorageSettings>(builder.Configuration.GetSection("Storage:LocalStorage"));
     builder.Services.Configure<S3StorageSettings>(builder.Configuration.GetSection("Storage:S3"));
     builder.Services.AddHttpContextAccessor();
@@ -127,8 +131,7 @@ try
 
     app.UseStaticFiles(new StaticFileOptions
     {
-        FileProvider = new PhysicalFileProvider(
-            Path.Combine(builder.Environment.WebRootPath, "uploads/images")),
+        FileProvider = new PhysicalFileProvider(localUploadsDirectory),
         RequestPath = "/images"
     });
 
