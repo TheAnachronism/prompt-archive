@@ -18,7 +18,7 @@ public class AddPromptCommentEndpoint : Endpoint<AddPromptCommentRequest, Prompt
 
     public override void Configure()
     {
-        Post("prompts/{PromptId:guid}/comments");
+        Post("prompts/{Id:guid}/comments");
     }
 
     public override async Task HandleAsync(AddPromptCommentRequest req, CancellationToken ct)
@@ -27,7 +27,7 @@ public class AddPromptCommentEndpoint : Endpoint<AddPromptCommentRequest, Prompt
         if (user is null)
             ThrowError("User not found");
 
-        var result = await new AddPromptCommentCommand(req.PromptId, user, req.Content).ExecuteAsync(ct);
+        var result = await new AddPromptCommentCommand(req.Id, user, req.Content).ExecuteAsync(ct);
         this.ThrowIfAnyErrors(result);
 
         await SendCreatedAtAsync<GetPromptByIdEndpoint>(new { Id = result.Value.PromptId }, result.Value.ToResponse(),

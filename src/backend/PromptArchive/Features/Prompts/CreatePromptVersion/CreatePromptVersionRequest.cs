@@ -5,7 +5,7 @@ namespace PromptArchive.Features.Prompts.CreatePromptVersion;
 
 public class CreatePromptVersionRequest
 {
-    public Guid PromptId { get; set; }
+    public Guid Id { get; set; }
     public string PromptContent { get; set; } = string.Empty;
 }
 
@@ -13,7 +13,7 @@ public class CreatePromptVersionRequestValidator : Validator<CreatePromptVersion
 {
     public CreatePromptVersionRequestValidator()
     {
-        RuleFor(x => x.PromptId).NotEmpty();
+        RuleFor(x => x.Id).NotEmpty();
         RuleFor(x => x.PromptContent).NotEmpty();
     }
 }

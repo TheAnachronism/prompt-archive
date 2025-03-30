@@ -5,7 +5,13 @@ using PromptArchive.Database;
 
 namespace PromptArchive.Features.Prompts.GetPrompts;
 
-public record GetPromptsCommand(int Page, int PageSize, string? SearchTerm, string? UserId)
+public record GetPromptsCommand(
+    int Page,
+    int PageSize,
+    string? SearchTerm,
+    string? UserId,
+    string[]? Models,
+    string[]? Tags)
     : ICommand<Result<PromptListResponse>>;
 
 public class GetPromptsCommandHandler : ICommandHandler<GetPromptsCommand, Result<PromptListResponse>>
@@ -39,6 +45,12 @@ public class GetPromptsCommandHandler : ICommandHandler<GetPromptsCommand, Resul
         }
 
         if (!string.IsNullOrWhiteSpace(command.UserId)) query = query.Where(p => p.UserId == command.UserId);
+
+        if (command.Models?.Length > 0)
+            query = query.Where(p => p.PromptModels.Any(pm => command.Models.Any(m => m.ToLower() == pm.Model.NormalizedName)));
+
+        if (command.Tags?.Length > 0)
+            query = query.Where(p => command.Tags.All(t => p.PromptTags.Any(pt => pt.Tag.NormalizedName == t.ToLower())));
 
         var totalCount = await query.CountAsync(ct);
 

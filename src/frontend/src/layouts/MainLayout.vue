@@ -45,7 +45,8 @@
                 <div class="flex items-center space-x-4">
                     <!-- Search -->
                     <div class="hidden md:block relative">
-                        <Input type="search" placeholder="Search prompts..." class="w-[200px] md:w-[300px]" />
+                        <Input type="search" v-model="searchQuery" placeholder="Search prompts..."
+                            class="w-[200px] md:w-[300px]" @keyup.enter="handleSearch" />
                     </div>
 
                     <UserMenu />
@@ -132,11 +133,9 @@ const searchQuery = ref('');
 const isAuthenticated = computed(() => authStore.isAuthenticated);
 
 function handleSearch() {
-    if (searchQuery.value.trim()) {
-        router.push({
-            path: '/prompts',
-            query: { search: searchQuery.value.trim() }
-        });
-    }
+    router.push({
+        path: '/prompts',
+        query: { search: searchQuery.value.trim() }
+    });
 }
 </script>

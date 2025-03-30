@@ -6,9 +6,9 @@ using PromptArchive.Features.Tags.GetTags;
 
 namespace PromptArchive.Features.Models.GetModels;
 
-public record GetModelsCommand() : ICommand<Result<List<Tag>>>;
+public record GetModelsCommand() : ICommand<Result<List<Model>>>;
 
-public class GetModelsCommandHandler : ICommandHandler<GetTagsCommand, Result<List<Tag>>>
+public class GetModelsCommandHandler : ICommandHandler<GetModelsCommand, Result<List<Model>>>
 {
     private readonly ApplicationDbContext _dbContext;
 
@@ -17,10 +17,10 @@ public class GetModelsCommandHandler : ICommandHandler<GetTagsCommand, Result<Li
         _dbContext = dbContext;
     }
 
-    public async Task<Result<List<Tag>>> ExecuteAsync(GetTagsCommand command, CancellationToken ct)
+    public async Task<Result<List<Model>>> ExecuteAsync(GetModelsCommand command, CancellationToken ct)
     {
-        return await _dbContext.Tags
-            .Include(t => t.PromptTags)
+        return await _dbContext.Models
+            .Include(t => t.PromptModels)
             .OrderBy(t => t.Name)
             .ToListAsync(cancellationToken: ct);
     }

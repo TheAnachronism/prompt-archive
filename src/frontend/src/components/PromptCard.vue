@@ -16,6 +16,12 @@
                 {{ prompt.description }}
             </p>
 
+            <div v-if="prompt.latestVersion?.promptContent" class="bg-muted p-2 rounded text-sm">
+                <p class="line-clamp-3 font-mono text-xs">
+                    {{ prompt.latestVersion.promptContent }}
+                </p>
+            </div>
+
             <div class="flex flex-wrap gap-1 mt-2">
                 <Badge v-for="model in prompt.models" :key="model" variant="default" class="text-xs">
                     {{ model }}

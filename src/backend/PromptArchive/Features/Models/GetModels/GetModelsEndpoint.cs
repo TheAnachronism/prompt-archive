@@ -14,14 +14,14 @@ public class GetModelsEndpoint : EndpointWithoutRequest<List<ModelResponse>>
 
     public override async Task HandleAsync(CancellationToken ct)
     {
-        var tagsResult = await new GetTagsCommand().ExecuteAsync(ct);
+        var tagsResult = await new GetModelsCommand().ExecuteAsync(ct);
         this.ThrowIfAnyErrors(tagsResult);
 
         await SendOkAsync(tagsResult.Value.Select(t => new ModelResponse
         {
             Id = t.Id,
             Name = t.Name,
-            PromptCount = t.PromptTags.Count
+            PromptCount = t.PromptModels.Count
         }).ToList(), ct);
     }
 }

@@ -9,14 +9,35 @@
                     </CardHeader>
                     <CardContent class="space-y-6">
                         <div class="space-y-2">
+                            <h3 class="text-sm font-medium">Models</h3>
+                            <AutoCompleteCombo :items="selectedModels" :availableItems="modelNames"
+                                placeholder="Filter by tags..." :add-unknown-items="false"
+                                :items-added-handler="applyFilters" :hide-add-button="true" />
+
+                            <div class="flex flex-wrap gap-1 mt-2">
+                                <Badge v-for="model in selectedModels" :key="model" class="flex items-center gap-1">
+                                    {{ model }}
+                                    <Button size="icon" class="h-4 w-4 p-0 hover:bg-transparent"
+                                        @click="removeModel(model)">
+                                        <XIcon class="h-3 w-3" />
+                                    </Button>
+                                </Badge>
+                            </div>
+
                             <h3 class="text-sm font-medium">Tags</h3>
-                            <div class="space-y-1 max-h-60 overflow-y-auto">
-                                <Button v-for="tag in tags" :key="tag.id" variant="ghost"
-                                    class="w-full justify-start text-sm"
-                                    :class="{ 'bg-accent': selectedTag === tag.name }" @click="selectTag(tag.name)">
-                                    <span>{{ tag.name }}</span>
-                                    <Badge variant="secondary" class="ml-auto">{{ tag.promptCount }}</Badge>
-                                </Button>
+                            <AutoCompleteCombo :items="selectedTags" :availableItems="tagNames"
+                                placeholder="Filter by tags..." :add-unknown-items="false"
+                                :items-added-handler="applyFilters" :hide-add-button="true" />
+
+                            <div class="flex flex-wrap gap-1 mt-2">
+                                <Badge v-for="tag in selectedTags" :key="tag" variant="secondary"
+                                    class="flex items-center gap-1">
+                                    {{ tag }}
+                                    <Button variant="ghost" size="icon" class="h-4 w-4 p-0 hover:bg-transparent"
+                                        @click="removeTag(tag)">
+                                        <XIcon class="h-3 w-3" />
+                                    </Button>
+                                </Badge>
                             </div>
                         </div>
 
@@ -36,8 +57,25 @@
                 <div class="flex justify-between items-center">
                     <h1 class="text-2xl font-bold">
                         {{ showMyPrompts ? 'My Prompts' : 'Browse Prompts' }}
-                        <span v-if="selectedTag" class="text-lg font-normal ml-2">
-                            tagged with <Badge>{{ selectedTag }}</Badge>
+                        <span v-if="selectedModels.length > 0" class="text-lg font-normal ml-2">
+                            for {{ selectedModels.length > 1 ? 'models' : 'model' }}
+                            <Badge v-for="model in selectedModels" :key="model" class="mr-1 inline-flex items-center gap-1">
+                                {{ model }}
+                                <Button size="icon" class="h-4 w-4 p-0 hover:bg-transparent"
+                                    @click="removeModel(model)">
+                                    <XIcon class="h-3 w-3" />
+                                </Button>
+                            </Badge>
+                        </span>
+                        <span v-if="selectedTags.length > 0" class="text-lg font-normal ml-2">
+                            tagged with
+                            <Badge v-for="tag in selectedTags" :key="tag" variant="secondary" class="mr-1 inline-flex items-center gap-1">
+                                {{ tag }}
+                                <Button variant="ghost" size="icon" class="h-4 w-4 p-0 hover:bg-transparent"
+                                    @click="removeTag(tag)">
+                                    <XIcon class="h-3 w-3" />
+                                </Button>
+                            </Badge>
                         </span>
                     </h1>
 
@@ -85,21 +123,27 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import PromptCard from '@/components/PromptCard.vue';
+import AutoCompleteCombo from '@/components/prompt/AutoCompleteCombo.vue';
 import Spinner from '@/components/Spinner.vue';
 import { usePromptStore } from '@/store/promptStore';
 import { useAuthStore } from '@/store/auth';
+import { XIcon } from 'lucide-vue-next';
 
 const router = useRouter();
 const route = useRoute();
 const promptStore = usePromptStore();
 const authStore = useAuthStore();
 
-const selectedTag = ref('');
+const selectedTags = ref<string[]>([]);
+const selectedModels = ref<string[]>([]);
 const showMyPrompts = ref(false);
 
 const isAuthenticated = computed(() => authStore.isAuthenticated);
 const prompts = computed(() => promptStore.prompts);
 const tags = computed(() => promptStore.tags);
+const tagNames = computed(() => tags.value.map(tag => tag.name));
+const models = computed(() => promptStore.models);
+const modelNames = computed(() => models.value.map(model => model.name));
 const isLoading = computed(() => promptStore.isLoading);
 const totalCount = computed(() => promptStore.totalCount);
 const currentPage = computed(() => promptStore.currentPage);
@@ -111,14 +155,17 @@ onMounted(async () => {
     // Parse query parameters
     const page = parseInt(route.query.page as string) || 1;
     const search = route.query.search as string || '';
-    const tag = route.query.tag as string || '';
+    const modelParam = route.query.models as string || '';
+    const tagParam = route.query.tags as string || '';
     const userId = route.query.userId as string || '';
 
-    selectedTag.value = tag;
+    selectedModels.value = modelParam ? modelParam.split(',') : [];
+    selectedTags.value = tagParam ? tagParam.split(',') : [];
     showMyPrompts.value = !!userId && userId === authStore.user?.id;
 
     // Load tags
     await promptStore.fetchTags();
+    await promptStore.fetchModels();
 
     // Load prompts with filters
     await loadPrompts(page, search);
@@ -136,22 +183,24 @@ async function loadPrompts(page = 1, search = '') {
         page,
         pageSize.value,
         search,
-        selectedTag.value,
+        selectedModels.value,
+        selectedTags.value,
         userId
     );
 }
 
-function selectTag(tag: string) {
-    if (selectedTag.value === tag) {
-        selectedTag.value = '';
-    } else {
-        selectedTag.value = tag;
-    }
+function toggleMyPrompts() {
+    showMyPrompts.value = !showMyPrompts.value;
     applyFilters();
 }
 
-function toggleMyPrompts() {
-    showMyPrompts.value = !showMyPrompts.value;
+function removeTag(tag: string) {
+    selectedTags.value = selectedTags.value.filter(t => t !== tag);
+    applyFilters();
+}
+
+function removeModel(model: string) {
+    selectedModels.value = selectedModels.value.filter(m => m !== model);
     applyFilters();
 }
 
@@ -162,8 +211,12 @@ function applyFilters() {
         query.search = route.query.search as string;
     }
 
-    if (selectedTag.value) {
-        query.tag = selectedTag.value;
+    if (selectedModels.value.length > 0) {
+        query.models = selectedModels.value.join(',');
+    }
+
+    if (selectedTags.value.length > 0) {
+        query.tags = selectedTags.value.join(',');
     }
 
     if (showMyPrompts.value && authStore.user) {

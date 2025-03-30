@@ -79,7 +79,7 @@ export interface UpdatePromptRequest {
 }
 
 export interface CreateVersionRequest {
-    content: string;
+    promptContent: string;
 }
 
 export interface CommentRequest {
@@ -87,12 +87,14 @@ export interface CommentRequest {
 }
 
 export const promptService = {
-    getPrompts: async (page = 1, pageSize = 10, searchTerm?: string, userId?: string): Promise<PromptListResponse> => {
+    getPrompts: async (page = 1, pageSize = 10, searchTerm: string | undefined, userId: string | undefined, models: string[], tags: string[]): Promise<PromptListResponse> => {
         const params = new URLSearchParams();
         params.append('page', page.toString());
         params.append('pageSize', pageSize.toString());
         if (searchTerm) params.append('searchTerm', searchTerm);
         if (userId) params.append('userId', userId);
+        models.forEach(m => params.append('models', m));
+        tags.forEach(t => params.append('tags', t));
 
         const { data } = await api.get(`prompts?${params.toString()}`);
         return data;

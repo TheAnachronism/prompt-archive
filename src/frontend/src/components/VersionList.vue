@@ -13,14 +13,19 @@
                     </span>
                 </div>
 
-                <Button v-if="version.id !== activeVersionId" variant="outline" size="sm"
-                    @click="$emit('select', version.id)">
-                    View
+                <Button variant="outline" size="sm" @click="$emit('select', version.id)">
+                    {{ version.id === activeVersionId ? 'Hide' : 'View Full' }}
                 </Button>
             </div>
 
-            <div v-if="version.id === activeVersionId" class="bg-muted p-3 rounded whitespace-pre-wrap">
-                {{ version.content }}
+            <!-- Always show a preview of the content -->
+            <div class="bg-muted p-3 rounded">
+                <p v-if="version.id === activeVersionId" class="whitespace-pre-wrap font-mono text-sm">
+                    {{ version.promptContent }}
+                </p>
+                <p v-else class="line-clamp-3 font-mono text-sm">
+                    {{ version.promptContent }}
+                </p>
             </div>
         </div>
     </div>

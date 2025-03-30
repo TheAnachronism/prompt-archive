@@ -35,12 +35,12 @@ export const usePromptStore = defineStore('prompt', () => {
         return currentPage.value > 1;
     });
 
-    async function fetchPrompts(page = 1, size = 10, searchTerm?: string, tag?: string, userId?: string) {
+    async function fetchPrompts(page = 1, size = 10, searchTerm: string | undefined, models: string[], tags: string[], userId: string | undefined) {
         isLoading.value = true;
         error.value = null;
 
         try {
-            const response = await promptService.getPrompts(page, size, searchTerm, userId);
+            const response = await promptService.getPrompts(page, size, searchTerm, userId, models, tags);
             prompts.value = response.prompts;
             totalCount.value = response.totalCount;
             currentPage.value = response.currentPage;
@@ -272,6 +272,7 @@ export const usePromptStore = defineStore('prompt', () => {
         versions,
         comments,
         tags,
+        models,
         totalCount,
         currentPage,
         pageSize,

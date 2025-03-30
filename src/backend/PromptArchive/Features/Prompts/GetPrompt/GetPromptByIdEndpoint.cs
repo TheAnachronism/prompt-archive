@@ -8,6 +8,7 @@ public class GetPromptByIdEndpoint : Endpoint<PromptIdRequest, PromptResponse>
     public override void Configure()
     {
         Get("prompts/{Id:guid}");
+        AllowAnonymous();
     }
 
     public override async Task HandleAsync(PromptIdRequest req, CancellationToken ct)

@@ -22,7 +22,7 @@
                         <span>/</span>
                         <span>{{ prompt.title }}</span>
                     </div>
-                    <h1 class="text-3xl font-bold">{{ prompt.title }}</h1>
+                    <h1 class="text-3xl font-bold text-left">{{ prompt.title }}</h1>
                     <div class="text-muted-foreground mt-1">
                         By {{ prompt.userName }} · Created {{ formatDate(prompt.createdAt) }}
                     </div>
@@ -46,7 +46,7 @@
                 </div>
             </div>
 
-            <!-- Models -->>
+            <!-- Models -->
             <div class="flex flex-wrap gap-2">
                 <Badge v-for="model in prompt.models" :key="model" variant="default">
                     {{ model }}
@@ -99,7 +99,7 @@
             </Card>
 
             <!-- Tabs for Versions and Comments -->
-            <Tabs default-value="versions" class="w-full">
+            <Tabs v-model="currentTab" class="w-full">
                 <TabsList class="grid w-full grid-cols-2">
                     <TabsTrigger value="versions">
                         Versions ({{ prompt.versionCount }})
@@ -219,6 +219,7 @@ const editingComment = ref<PromptComment | null>(null);
 const showDeleteDialog = ref(false);
 const showDeleteCommentDialog = ref(false);
 const commentToDelete = ref<PromptComment | null>(null);
+const currentTab = ref('versions');
 
 const prompt = computed(() => promptStore.currentPrompt);
 const versions = computed(() => promptStore.versions);
@@ -281,7 +282,7 @@ async function createVersion(content: string) {
     if (!promptId.value) return;
 
     try {
-        await promptStore.createVersion(promptId.value, { content });
+        await promptStore.createVersion(promptId.value, { promptContent: content });
         showNewVersionForm.value = false;
         await loadPromptData();
     } catch (error) {

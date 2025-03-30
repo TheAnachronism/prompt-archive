@@ -6,7 +6,7 @@
 
         <div v-for="comment in comments" :key="comment.id" class="border rounded-lg p-4 space-y-2">
             <div class="flex justify-between items-start">
-                <div class="font-medium">{{ comment.userName }}</div>
+                <div class="font-medium">@{{ comment.userName }}</div>
                 <div class="flex items-center gap-2">
                     <div class="text-xs text-muted-foreground">
                         {{ formatDate(comment.updatedAt || comment.createdAt) }}
