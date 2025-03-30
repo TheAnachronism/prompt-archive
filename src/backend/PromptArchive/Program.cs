@@ -1,17 +1,12 @@
-using System.Net;
 using FastEndpoints;
-using FastEndpoints.Security;
 using FastEndpoints.Swagger;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using PromptArchive.Configuration;
 using PromptArchive.Database;
-using PromptArchive.Features.Auth;
 using PromptArchive.Services;
 using Serilog;
-using YamlDotNet.Serialization;
 
 var config = new ConfigurationBuilder().AddJsonFile("appsettings.json").Build();
 var loggerConfig = new LoggerConfiguration().ReadFrom.Configuration(config);
@@ -27,9 +22,9 @@ try
     builder.Logging.AddSerilog();
 
     var localUploadsDirectory = Path.Combine(builder.Environment.WebRootPath, "uploads/images");
-    if(!Directory.Exists(localUploadsDirectory))
+    if (!Directory.Exists(localUploadsDirectory))
         Directory.CreateDirectory(localUploadsDirectory);
-    
+
     builder.Services.Configure<LocalStorageSettings>(builder.Configuration.GetSection("Storage:LocalStorage"));
     builder.Services.Configure<S3StorageSettings>(builder.Configuration.GetSection("Storage:S3"));
     builder.Services.AddHttpContextAccessor();
@@ -37,11 +32,9 @@ try
     builder.Services.AddSingleton<LocalStorageSettings>();
     builder.Services.AddSingleton(StorageServiceFactory.CreateStorageService);
 
-    builder.Services.AddSwaggerDocument()
-        .AddEndpointsApiExplorer();
-
     builder.Services.AddDbContext<ApplicationDbContext>(c =>
-        c.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+        c.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"),
+            b => b.UseQuerySplittingBehavior(QuerySplittingBehavior.SingleQuery)));
 
     builder.Services.AddIdentity<ApplicationUser, IdentityRole>(o =>
         {
@@ -107,13 +100,23 @@ try
         });
     });
 
-    builder.Services.AddFastEndpoints();
+    builder.Services
+        .AddFastEndpoints()
+        .SwaggerDocument(o =>
+        {
+            o.MaxEndpointVersion = 1;
+            o.DocumentSettings = s =>
+            {
+                s.DocumentName = "Initial Release";
+                s.Title = "PromptArchive API";
+                s.Version = "v1";
+            };
+        });
 
     var app = builder.Build();
 
     if (app.Environment.IsDevelopment())
     {
-        app.UseSwaggerUi();
         app.UseDeveloperExceptionPage();
     }
     else
@@ -136,23 +139,22 @@ try
     });
 
     app.UseFastEndpoints(c =>
-    {
-        c.Versioning.Prefix = "v";
-        c.Versioning.DefaultVersion = 1;
-        c.Versioning.PrependToRoute = true;
-        c.Endpoints.RoutePrefix = "api";
-
-        c.Errors.ResponseBuilder = (failures, ctx, statusCode) =>
         {
-            return new
-            {
-                status = statusCode,
-                errors = failures.Select(f => f.ErrorMessage).ToList()
-            };
-        };
-    });
+            c.Versioning.Prefix = "v";
+            c.Versioning.DefaultVersion = 1;
+            c.Versioning.PrependToRoute = true;
+            c.Endpoints.RoutePrefix = "api";
 
-    app.UseSwaggerGen();
+            c.Errors.ResponseBuilder = (failures, ctx, statusCode) =>
+            {
+                return new
+                {
+                    status = statusCode,
+                    errors = failures.Select(f => f.ErrorMessage).ToList()
+                };
+            };
+        })
+        .UseSwaggerGen();
 
     await using (var scope = app.Services.CreateAsyncScope())
     {

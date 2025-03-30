@@ -5,7 +5,7 @@ using PromptArchive.Database;
 
 namespace PromptArchive.Features.UserManagement.ListUsers;
 
-public class ListUsersEndpoint : Endpoint<ListUsersRequewst, UserListResponse>
+public class ListUsersEndpoint : Endpoint<ListUsersRequest, UserListResponse>
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ILogger<ListUsersEndpoint> _logger;
@@ -22,7 +22,7 @@ public class ListUsersEndpoint : Endpoint<ListUsersRequewst, UserListResponse>
         Policies("Admin");
     }
 
-    public override async Task HandleAsync(ListUsersRequewst req, CancellationToken ct)
+    public override async Task HandleAsync(ListUsersRequest req, CancellationToken ct)
     {
         var query = _userManager.Users.AsQueryable();
 

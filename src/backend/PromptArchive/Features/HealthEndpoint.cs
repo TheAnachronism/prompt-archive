@@ -1,5 +1,6 @@
 using FastEndpoints;
-using Serilog;
+using FluentResults;
+using PromptArchive.Extensions;
 
 namespace PromptArchive.Features;
 
