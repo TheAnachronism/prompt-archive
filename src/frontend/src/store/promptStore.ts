@@ -1,4 +1,3 @@
-// store/prompt.ts
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import {
@@ -158,6 +157,48 @@ export const usePromptStore = defineStore('prompt', () => {
         }
     }
 
+    async function addImagesToVersion(versionId: string, images: File[], captions?: Record<string, string>) {
+        isLoading.value = true;
+        error.value = null;
+
+        try {
+            await promptService.addImagesToVersion(versionId, images, captions);
+
+            // Refresh versions if we're viewing the prompt
+            if (currentPrompt.value) {
+                await fetchVersions(currentPrompt.value.id);
+                await fetchPromptById(currentPrompt.value.id);
+            }
+        } catch (err) {
+            error.value = 'Failed to add images to version';
+            console.error('Error adding images to version:', err);
+            throw err;
+        } finally {
+            isLoading.value = false;
+        }
+    }
+
+    async function deleteVersionImage(imageId: string, promptId: string) {
+        isLoading.value = true;
+        error.value = null;
+
+        try {
+            await promptService.deleteVersionImage(imageId);
+
+            // Refresh versions if we're viewing the prompt
+            if (currentPrompt.value?.id === promptId) {
+                await fetchVersions(promptId);
+                await fetchPromptById(promptId);
+            }
+        } catch (err) {
+            error.value = 'Failed to delete image';
+            console.error('Error deleting image:', err);
+            throw err;
+        } finally {
+            isLoading.value = false;
+        }
+    }
+
     async function fetchComments(promptId: string) {
         isLoading.value = true;
         error.value = null;
@@ -287,6 +328,8 @@ export const usePromptStore = defineStore('prompt', () => {
         deletePrompt,
         fetchVersions,
         createVersion,
+        addImagesToVersion,
+        deleteVersionImage,
         fetchComments,
         addComment,
         updateComment,

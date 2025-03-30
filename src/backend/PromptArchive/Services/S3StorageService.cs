@@ -1,3 +1,4 @@
+using FastEndpoints;
 using FluentResults;
 using Microsoft.Extensions.Options;
 using Minio;
@@ -116,7 +117,8 @@ public class S3StorageService : IStorageService
 
     public string GetImageUrl(string imagePath)
     {
-        return $"prompts/versions/images/{Uri.EscapeDataString(imagePath)}";
+        var endpoint = _httpContextAccessor.HttpContext?.GetEndpoint()?.Metadata.GetMetadata<EndpointDefinition>();
+        return $"/api/v{endpoint!.Version.Current}/prompts/versions/images/{Uri.EscapeDataString(imagePath)}";
     }
 
     public async Task<Result<(Stream Stream, string ContentType)>> GetImageStreamAsync(string imagePath,

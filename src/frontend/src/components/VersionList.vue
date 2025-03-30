@@ -13,19 +13,32 @@
                     </span>
                 </div>
 
-                <Button variant="outline" size="sm" @click="$emit('select', version.id)">
-                    {{ version.id === activeVersionId ? 'Hide' : 'View Full' }}
+                <Button variant="ghost" size="sm" @click="$emit('select', version.id)"
+                    :class="{ 'bg-accent': version.id === activeVersionId }">
+                    {{ version.id === activeVersionId ? 'Hide' : 'Show' }}
                 </Button>
             </div>
 
             <!-- Always show a preview of the content -->
-            <div class="bg-muted p-3 rounded">
-                <p v-if="version.id === activeVersionId" class="whitespace-pre-wrap font-mono text-sm">
+            <div v-if="version.id === activeVersionId" class="mt-4 space-y-4">
+                <div class="bg-muted p-4 rounded-lg whitespace-pre-wrap">
                     {{ version.promptContent }}
-                </p>
-                <p v-else class="line-clamp-3 font-mono text-sm">
-                    {{ version.promptContent }}
-                </p>
+                </div>
+
+                <!-- Display images if available -->
+                <div v-if="version.images?.length" class="mt-4">
+                    <h4 class="text-sm font-medium mb-2">Images</h4>
+                    <ImageGallery :images="version.images" :can-delete="canEdit"
+                        @delete="(imageId: string) => $emit('delete-image', imageId, version.promptId)" />
+                </div>
+
+                <!-- Add images button if user can edit -->
+                <div v-if="canEdit" class="flex justify-end">
+                    <Button variant="outline" size="sm" @click="$emit('add-images', version.id)">
+                        <PlusIcon class="h-4 w-4 mr-1" />
+                        Add Images
+                    </Button>
+                </div>
             </div>
         </div>
     </div>
@@ -34,15 +47,20 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import ImageGallery from './prompt/ImageGallery.vue';
+import { PlusIcon } from 'lucide-vue-next';
 import { type PromptVersion } from '@/utils/promptService';
 
 defineProps<{
     versions: PromptVersion[];
     activeVersionId?: string;
+    canEdit?: boolean;
 }>();
 
 defineEmits<{
     (e: 'select', versionId: string): void;
+    (e: 'add-images', versionId: string): void;
+    (e: 'delete-image', imageId: string, promptId: string): void;
 }>();
 
 function formatDate(dateString: string): string {

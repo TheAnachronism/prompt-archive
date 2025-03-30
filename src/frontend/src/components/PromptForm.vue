@@ -72,6 +72,10 @@
             </div>
         </div>
 
+        <div class="space-y-2">
+            <ImageUploader v-if="!isEditMode" v-model="form.images" v-model:captionsValue="form.imageCaptions" />
+        </div>
+
         <div class="flex justify-end gap-2">
             <Button type="button" variant="outline" @click="$emit('cancel')">
                 Cancel
@@ -91,6 +95,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import AutoCompleteCombo from './prompt/AutoCompleteCombo.vue';
+import ImageUploader from './prompt/ImageUploader.vue';
 import { XIcon } from 'lucide-vue-next';
 import { type Prompt } from '@/utils/promptService';
 import { usePromptStore } from '@/store/promptStore';
@@ -115,7 +120,9 @@ const form = reactive({
     description: props.initialData?.description || '',
     promptContent: props.initialData?.latestVersion?.promptContent || '',
     tags: props.initialData?.tags || [],
-    models: props.initialData?.models || []
+    models: props.initialData?.models || [],
+    images: [] as File[],
+    imageCaptions: {} as Record<string, string>
 });
 
 // Available tags and models for autocomplete

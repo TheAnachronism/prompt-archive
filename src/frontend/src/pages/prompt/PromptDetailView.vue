@@ -84,6 +84,11 @@
                     <div class="bg-muted p-4 rounded-lg whitespace-pre-wrap">
                         {{ prompt.latestVersion.promptContent }}
                     </div>
+                    <div v-if="prompt.latestVersion.images?.length" class="mt-6">
+                        <h3 class="text-lg font-medium mb-3">Images</h3>
+                        <ImageGallery :images="prompt.latestVersion.images" :can-delete="canEdit"
+                            @delete="(imageId) => handleDeleteImage(imageId, prompt?.id)" />
+                    </div>
                 </CardContent>
             </Card>
 
@@ -113,7 +118,8 @@
                     <Card>
                         <CardContent class="pt-6">
                             <VersionList :versions="versions" :active-version-id="activeVersionId"
-                                @select="selectVersion" />
+                                @select="selectVersion" @add-images="openAddImagesModal"
+                                @delete-image="handleDeleteImage" />
                         </CardContent>
                     </Card>
                 </TabsContent>
@@ -186,16 +192,45 @@
                 </DialogFooter>
             </DialogContent>
         </Dialog>
+
+        <Dialog :open="showAddImagesModal" @update:open="showAddImagesModal = $event">
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Add Images to Version</DialogTitle>
+                    <DialogDescription>
+                        Upload additional images for this prompt version.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <form @submit.prevent="handleAddImages">
+                    <div class="space-y-4">
+                        <ImageUploader v-model="addImagesForm.images"
+                            v-model:captionsValue="addImagesForm.imageCaptions" />
+
+                        <DialogFooter>
+                            <Button type="button" variant="outline" @click="showAddImagesModal = false">
+                                Cancel
+                            </Button>
+                            <Button type="submit" :disabled="isSubmittingImages || !addImagesForm.images.length">
+                                <Spinner v-if="isSubmittingImages" class="mr-2 h-4 w-4" />
+                                Upload Images
+                            </Button>
+                        </DialogFooter>
+                    </div>
+                </form>
+            </DialogContent>
+        </Dialog>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, reactive } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { toast } from '@/components/ui/toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { PencilIcon, TrashIcon, PlusIcon } from 'lucide-vue-next';
 import Spinner from '@/components/Spinner.vue';
@@ -203,6 +238,8 @@ import VersionForm from '@/components/VersionForm.vue';
 import VersionList from '@/components/VersionList.vue';
 import CommentForm from '@/components/CommentForm.vue';
 import CommentList from '@/components/CommentList.vue';
+import ImageGallery from '@/components/prompt/ImageGallery.vue';
+import ImageUploader from '@/components/prompt/ImageUploader.vue';
 import { usePromptStore } from '@/store/promptStore';
 import { useAuthStore } from '@/store/auth';
 import { type PromptComment } from '@/utils/promptService';
@@ -220,6 +257,14 @@ const showDeleteDialog = ref(false);
 const showDeleteCommentDialog = ref(false);
 const commentToDelete = ref<PromptComment | null>(null);
 const currentTab = ref('versions');
+
+const showAddImagesModal = ref(false);
+const selectedVersionId = ref('');
+const addImagesForm = reactive({
+    images: [] as File[],
+    imageCaptions: {} as Record<string, string>
+});
+const isSubmittingImages = ref(false);
 
 const prompt = computed(() => promptStore.currentPrompt);
 const versions = computed(() => promptStore.versions);
@@ -278,17 +323,35 @@ function selectVersion(versionId: string) {
     }
 }
 
-async function createVersion(content: string) {
+async function createVersion(version: { promptContent: string, images: File[], imageCaptions: Record<string, string> }) {
     if (!promptId.value) return;
 
     try {
-        await promptStore.createVersion(promptId.value, { promptContent: content });
+        await promptStore.createVersion(promptId.value, version);
         showNewVersionForm.value = false;
         await loadPromptData();
+
+        toast({
+            title: 'Version created',
+            description: 'New version has been created successfully.'
+        });
     } catch (error) {
         console.error('Failed to create version:', error);
+        toast({
+            title: 'Error',
+            description: 'Failed to create version. Please try again.',
+            variant: 'destructive'
+        });
     }
 }
+
+function openAddImagesModal(versionId: string) {
+    selectedVersionId.value = versionId;
+    addImagesForm.images = [];
+    addImagesForm.imageCaptions = {};
+    showAddImagesModal.value = true;
+}
+
 
 function confirmDelete() {
     showDeleteDialog.value = true;
@@ -347,4 +410,63 @@ async function deleteComment() {
         console.error('Failed to delete comment:', error);
     }
 }
+
+async function handleAddImages() {
+    if (!selectedVersionId.value || addImagesForm.images.length === 0) return;
+
+    isSubmittingImages.value = true;
+    try {
+        await promptStore.addImagesToVersion(
+            selectedVersionId.value,
+            addImagesForm.images,
+            addImagesForm.imageCaptions
+        );
+
+        toast({
+            title: 'Images added',
+            description: 'Images have been added successfully.'
+        });
+
+        showAddImagesModal.value = false;
+        await loadPromptData(); // Refresh data to show new images
+    } catch (error) {
+        console.error('Error adding images:', error);
+        toast({
+            title: 'Error',
+            description: 'Failed to add images. Please try again.',
+            variant: 'destructive'
+        });
+    } finally {
+        isSubmittingImages.value = false;
+    }
+}
+
+async function handleDeleteImage(imageId: string, promptId?: string) {
+    if (!promptId && prompt.value) {
+        promptId = prompt.value.id;
+    }
+
+    if (!promptId) return;
+
+    if (!confirm('Are you sure you want to delete this image?')) return;
+
+    try {
+        await promptStore.deleteVersionImage(imageId, promptId);
+
+        toast({
+            title: 'Image deleted',
+            description: 'Image has been deleted successfully.'
+        });
+
+        await loadPromptData(); // Refresh data to show updated images
+    } catch (error) {
+        console.error('Error deleting image:', error);
+        toast({
+            title: 'Error',
+            description: 'Failed to delete image. Please try again.',
+            variant: 'destructive'
+        });
+    }
+}
+
 </script>

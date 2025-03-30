@@ -28,10 +28,11 @@ export interface PromptVersion {
 
 export interface PromptImage {
     id: string;
-    url: string;
-    fileName: string;
+    imageUrl: string;
     caption?: string;
-    displayOrder: number;
+    createdAt: string;
+    originalFileName: string;
+    fileSizeBytes: number;
 }
 
 export interface PromptComment {
@@ -69,6 +70,8 @@ export interface CreatePromptRequest {
     promptContent: string;
     tags: string[];
     models: string[];
+    images?: File[];
+    imageCaptions?: Record<string, string>
 }
 
 export interface UpdatePromptRequest {
@@ -80,6 +83,8 @@ export interface UpdatePromptRequest {
 
 export interface CreateVersionRequest {
     promptContent: string;
+    images?: File[];
+    imageCaptions?: Record<string, string>
 }
 
 export interface CommentRequest {
@@ -104,7 +109,29 @@ export const promptService = {
         return data;
     },
     createPrompt: async (prompt: CreatePromptRequest): Promise<Prompt> => {
-        const { data } = await api.post('prompts', prompt);
+        const formData = new FormData();
+        formData.append('title', prompt.title)
+        formData.append('description', prompt.description);
+        formData.append('promptContent', prompt.promptContent);
+
+        prompt.tags.forEach(t => formData.append('tags', t));
+        prompt.models.forEach(m => formData.append('models', m));
+
+        if (prompt.images) {
+            prompt.images.forEach(i => {
+                formData.append('images', i);
+
+                if (prompt.imageCaptions && Object.keys(prompt.imageCaptions).length > 0) {
+                    formData.append('ImageCaptionsJson', JSON.stringify(prompt.imageCaptions));
+                }
+            });
+        }
+
+        const { data } = await api.post('prompts', formData, {
+            headers: {
+                "Content-Type": 'multipart/form-data'
+            }
+        });
         return data;
     },
     updatePrompt: async (id: string, prompt: UpdatePromptRequest): Promise<Prompt> => {
@@ -125,8 +152,46 @@ export const promptService = {
     },
 
     createVersion: async (promptId: string, version: CreateVersionRequest): Promise<PromptVersion> => {
-        const { data } = await api.post(`/prompts/${promptId}/versions`, version);
+        const formData = new FormData();
+        formData.append('promptContent', version.promptContent);
+
+        if (version.images) {
+            version.images.forEach(image => {
+                formData.append('images', image);
+
+                if (version.imageCaptions && Object.keys(version.imageCaptions).length > 0) {
+                    formData.append('ImageCaptionsJson', JSON.stringify(version.imageCaptions));
+                }
+            });
+        }
+        const { data } = await api.post(`/prompts/${promptId}/versions`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
         return data;
+    },
+
+    addImagesToVersion: async (versionId: string, images: File[], captions?: Record<string, string>): Promise<void> => {
+        const formData = new FormData();
+
+        images.forEach(image => {
+            formData.append('images', image);
+
+            if (captions && Object.keys(captions).length > 0) {
+                formData.append('ImageCaptionsJson', JSON.stringify(captions));
+            }
+        });
+
+        await api.post(`/prompts/versions/${versionId}/images`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+    },
+
+    deleteVersionImage: async (imageId: string): Promise<void> => {
+        await api.delete(`/prompts/versions/images/${imageId}`);
     },
 
     getComments: async (promptId: string): Promise<PromptComment[]> => {

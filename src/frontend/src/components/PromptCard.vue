@@ -12,6 +12,12 @@
             </CardDescription>
         </CardHeader>
         <CardContent class="flex-grow">
+            <div v-if="prompt.latestVersion?.images?.length && prompt.latestVersion?.images?.length > 0" class="mb-4">
+                <img :src="prompt.latestVersion.images[0].imageUrl"
+                    :alt="prompt.latestVersion.images[0].caption || prompt.title"
+                    class="w-full h-32 object-cover rounded-md" />
+            </div>
+
             <p class="text-sm text-muted-foreground line-clamp-3 mb-4">
                 {{ prompt.description }}
             </p>
@@ -38,9 +44,15 @@
             <Badge variant="outline" class="text-xs">
                 {{ prompt.versionCount }} {{ prompt.versionCount === 1 ? 'version' : 'versions' }}
             </Badge>
-            <Badge variant="outline" class="text-xs">
-                {{ prompt.commentCount }} {{ prompt.commentCount === 1 ? 'comment' : 'comments' }}
-            </Badge>
+            <div class="flex gap-2">
+                <Badge variant="outline" class="text-xs">
+                    {{ prompt.latestVersion?.images?.length || 0 }} {{ (prompt.latestVersion?.images?.length || 0) === 1
+                        ? 'image' : 'images' }}
+                </Badge>
+                <Badge variant="outline" class="text-xs">
+                    {{ prompt.commentCount }} {{ prompt.commentCount === 1 ? 'comment' : 'comments' }}
+                </Badge>
+            </div>
         </CardFooter>
     </Card>
 </template>

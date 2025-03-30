@@ -1,3 +1,4 @@
+using System.Text.Json;
 using FastEndpoints;
 using FluentResults;
 using FluentValidation;
@@ -12,7 +13,22 @@ public class CreatePromptRequest
     public List<string> Tags { get; set; } = [];
     public List<string> Models { get; set; } = [];
     public List<IFormFile>? Images { get; set; }
-    public Dictionary<string, string> ImageCaptions { get; set; } = new();
+    public string? ImageCaptionsJson { get; set; }
+    
+    public Dictionary<string, string>? GetImageCaptions()
+    {
+        if (string.IsNullOrEmpty(ImageCaptionsJson))
+            return null;
+
+        try
+        {
+            return JsonSerializer.Deserialize<Dictionary<string, string>>(ImageCaptionsJson);
+        }
+        catch
+        {
+            return null;
+        }
+    }
 }
 
 public class CreatePromptRequestValidator : Validator<CreatePromptRequest>

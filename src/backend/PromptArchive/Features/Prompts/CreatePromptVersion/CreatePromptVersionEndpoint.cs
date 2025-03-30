@@ -34,7 +34,7 @@ public class CreatePromptVersionEndpoint : Endpoint<CreatePromptVersionRequest, 
                 ImageStream = i.OpenReadStream(),
                 FileName = i.FileName,
                 ContentType = i.ContentType,
-                Caption = req.ImageCaptions?.GetValueOrDefault(i.FileName),
+                Caption = req.GetImageCaptions()?.GetValueOrDefault(i.FileName),
                 FileSize = i.Length
             }));
         }

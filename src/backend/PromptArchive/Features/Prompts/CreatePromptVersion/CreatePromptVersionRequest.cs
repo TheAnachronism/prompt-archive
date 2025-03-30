@@ -1,3 +1,4 @@
+using System.Text.Json;
 using FastEndpoints;
 using FluentValidation;
 
@@ -8,7 +9,22 @@ public class CreatePromptVersionRequest
     public Guid Id { get; set; }
     public string PromptContent { get; set; } = string.Empty;
     public List<IFormFile>? Images { get; set; }
-    public Dictionary<string, string>? ImageCaptions { get; set; }
+    public string? ImageCaptionsJson { get; set; }
+    
+    public Dictionary<string, string>? GetImageCaptions()
+    {
+        if (string.IsNullOrEmpty(ImageCaptionsJson))
+            return null;
+
+        try
+        {
+            return JsonSerializer.Deserialize<Dictionary<string, string>>(ImageCaptionsJson);
+        }
+        catch
+        {
+            return null;
+        }
+    }
 }
 
 public class CreatePromptVersionRequestValidator : Validator<CreatePromptVersionRequest>

@@ -34,7 +34,7 @@ public class AddImagesToPromptVersionEndpoint : Endpoint<AddImagesToPromptVersio
                     ImageStream = image.OpenReadStream(),
                     FileName = image.FileName,
                     ContentType = image.ContentType,
-                    Caption = req.ImageCaptions?.GetValueOrDefault(image.FileName),
+                    Caption = req.GetImageCaptions()?.GetValueOrDefault(image.FileName),
                     FileSize = image.Length
                 }));
         }
