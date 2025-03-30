@@ -1,61 +1,96 @@
-using System.Net;
-using Amazon.S3;
-using Amazon.S3.Model;
-using Amazon.S3.Transfer;
-using FastEndpoints;
 using FluentResults;
 using Microsoft.Extensions.Options;
+using Minio;
+using Minio.DataModel.Args;
+using Minio.Exceptions;
 using PromptArchive.Configuration;
 
 namespace PromptArchive.Services;
 
 public class S3StorageService : IStorageService
 {
-    private readonly IAmazonS3 _s3Client;
+    private readonly IMinioClient _s3Client;
     private readonly string _bucketName;
-    private readonly string _baseUrl;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ILogger<S3StorageService> _logger;
 
-    public S3StorageService(IOptions<S3StorageSettings> s3Settings, IHttpContextAccessor httpContextAccessor)
+    public S3StorageService(IOptions<S3StorageSettings> s3Settings, IHttpContextAccessor httpContextAccessor,
+        ILogger<S3StorageService> logger)
     {
         _httpContextAccessor = httpContextAccessor;
+        _logger = logger;
         ArgumentNullException.ThrowIfNull(s3Settings.Value.BucketName);
         ArgumentNullException.ThrowIfNull(s3Settings.Value.AccessKey);
         ArgumentNullException.ThrowIfNull(s3Settings.Value.SecretKey);
 
         _bucketName = s3Settings.Value.BucketName;
-        _baseUrl = s3Settings.Value.BaseUrl ?? $"https://{_bucketName}.s3.amazonaws.com";
+        var baseUrl = s3Settings.Value.BaseUrl ?? $"https://{_bucketName}.s3.amazonaws.com";
 
-        _s3Client = new AmazonS3Client(
-            s3Settings.Value.AccessKey,
-            s3Settings.Value.SecretKey,
-            new AmazonS3Config
-            {
-                RegionEndpoint = Amazon.RegionEndpoint.GetBySystemName(
-                    s3Settings.Value.Region ?? "us-east-1"
-                )
-            }
-        );
+        var builder = new MinioClient()
+            .WithEndpoint(baseUrl)
+            .WithCredentials(s3Settings.Value.AccessKey, s3Settings.Value.SecretKey)
+            .WithSSL(s3Settings.Value.Secure ?? true);
+
+        if (!string.IsNullOrWhiteSpace(s3Settings.Value.Region))
+            builder = builder.WithRegion(s3Settings.Value.Region);
+
+        _s3Client = builder.Build();
+
+        EnsureBucketExistsAsync().GetAwaiter().GetResult();
     }
 
-    public async Task<string> UploadImageAsync(Stream fileStream, string fileName, string contentType, CancellationToken cancellationToken = default)
+    private async Task EnsureBucketExistsAsync()
+    {
+        try
+        {
+            var bucketExistsArgs = new BucketExistsArgs()
+                .WithBucket(_bucketName);
+
+            var found = await _s3Client.BucketExistsAsync(bucketExistsArgs);
+            if (!found)
+            {
+                var makeBucketArgs = new MakeBucketArgs()
+                    .WithBucket(_bucketName);
+
+                await _s3Client.MakeBucketAsync(makeBucketArgs);
+
+                _logger.LogInformation("Created bucket: {BucketName}", _bucketName);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to ensure bucket exists: {BucketName}", _bucketName);
+            throw;
+        }
+    }
+
+    public async Task<string> UploadImageAsync(Stream fileStream, string fileName, string contentType,
+        CancellationToken cancellationToken = default)
     {
         var uniqueFileName = $"{Guid.NewGuid()}_{fileName}";
         var key = $"images/{uniqueFileName}";
 
-        var putRequest = new TransferUtilityUploadRequest
+        var length = fileStream.Length;
+
+        var putRequest = new PutObjectArgs()
+            .WithBucket(_bucketName)
+            .WithObject(key)
+            .WithStreamData(fileStream)
+            .WithObjectSize(length)
+            .WithContentType(contentType);
+
+        try
         {
-            BucketName = _bucketName,
-            Key = key,
-            InputStream = fileStream,
-            ContentType = contentType,
-            CannedACL = S3CannedACL.Private
-        };
+            await _s3Client.PutObjectAsync(putRequest, cancellationToken);
+            _logger.LogInformation("Successfully uploaded {FileName} to {BucketName}", uniqueFileName, _bucketName);
 
-        var transferUtility = new TransferUtility(_s3Client);
-        await transferUtility.UploadAsync(putRequest, cancellationToken);
-
-        return uniqueFileName;
+            return uniqueFileName;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to upload file {FileName} to {BucketName}", uniqueFileName, _bucketName);
+            throw;
+        }
     }
 
     public async Task DeleteImageAsyncTask(string imagePath, CancellationToken cancellationToken = default)
@@ -63,13 +98,20 @@ public class S3StorageService : IStorageService
         if (string.IsNullOrEmpty(imagePath))
             return;
 
-        var deleteRequest = new DeleteObjectRequest
-        {
-            BucketName = _bucketName,
-            Key = $"images/{imagePath}"
-        };
+        var deleteRequest = new RemoveObjectArgs()
+            .WithBucket(_bucketName)
+            .WithObject($"images/{imagePath}");
 
-        await _s3Client.DeleteObjectAsync(deleteRequest, cancellationToken);
+        try
+        {
+            await _s3Client.RemoveObjectAsync(deleteRequest, cancellationToken);
+            _logger.LogInformation("Successfully deleted {ImagePath} from {BucketName}", imagePath, _bucketName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete file {ImagePath} from {BucketName}", imagePath, _bucketName);
+            throw;
+        }
     }
 
     public string GetImageUrl(string imagePath)
@@ -77,22 +119,44 @@ public class S3StorageService : IStorageService
         return $"prompts/versions/images/{Uri.EscapeDataString(imagePath)}";
     }
 
-    public async Task<Result<(Stream Stream, string ContentType)>> GetImageStreamAsync(string imagePath, CancellationToken cancellationToken = default)
+    public async Task<Result<(Stream Stream, string ContentType)>> GetImageStreamAsync(string imagePath,
+        CancellationToken cancellationToken = default)
     {
+        var path = $"images/{imagePath}";
         try
         {
-            var request = new GetObjectRequest
-            {
-                BucketName = _bucketName,
-                Key = $"images/{imagePath}"
-            };
+            var statObjectArgs = new StatObjectArgs()
+                .WithBucket(_bucketName)
+                .WithObject(path);
 
-            var response = await _s3Client.GetObjectAsync(request, cancellationToken);
-            return (response.ResponseStream, response.Headers.ContentType);
+            // Get object metadata to check if it exists and get content type
+            var objectStat = await _s3Client.StatObjectAsync(statObjectArgs, cancellationToken);
+
+            // Create a memory stream to hold the object data
+            var memoryStream = new MemoryStream();
+
+            var getObjectArgs = new GetObjectArgs()
+                .WithBucket(_bucketName)
+                .WithObject(path)
+                .WithCallbackStream(stream =>
+                {
+                    stream.CopyTo(memoryStream);
+                    memoryStream.Position = 0;
+                });
+
+            await _s3Client.GetObjectAsync(getObjectArgs, cancellationToken);
+
+            return (memoryStream, objectStat.ContentType);
         }
-        catch (AmazonS3Exception ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+        catch (ObjectNotFoundException)
         {
-         return Result.Fail("Image not found");
+            _logger.LogWarning("Image not found: {ImagePath} in bucket {BucketName}", imagePath, _bucketName);
+            return Result.Fail("Image not found");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving image {ImagePath} from {BucketName}", imagePath, _bucketName);
+            return Result.Fail(ex.Message);
         }
     }
 }

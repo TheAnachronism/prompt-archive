@@ -7,7 +7,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="AWSSDK.S3" Version="3.7.415.27" />
         <PackageReference Include="FastEndpoints.Security" Version="5.35.0" />
         <PackageReference Include="FastEndpoints.Swagger" Version="5.35.0" />
         <PackageReference Include="FluentResults" Version="3.16.0" />
@@ -17,6 +16,7 @@
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
+        <PackageReference Include="Minio" Version="6.0.4" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
         <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
         <PackageReference Include="Serilog.Settings.Configuration" Version="9.0.0" />
@@ -26,6 +26,7 @@
 
     <ItemGroup>
       <Folder Include="Configuration\Mappings\" />
+      <Folder Include="wwwroot\uploads\images\" />
     </ItemGroup>
 
 </Project>
