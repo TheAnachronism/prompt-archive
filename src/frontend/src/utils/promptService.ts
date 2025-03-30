@@ -171,6 +171,10 @@ export const promptService = {
         return data;
     },
 
+    deletePromptVersion: async (versionId: string): Promise<void> => {
+        await api.delete(`prompts/versions/${versionId}`);
+    },
+
     addImagesToVersion: async (versionId: string, images: File[], captions?: Record<string, string>): Promise<void> => {
         const formData = new FormData();
 

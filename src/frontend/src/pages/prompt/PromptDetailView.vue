@@ -120,7 +120,7 @@
                             <VersionList :versions="versions" :active-version-id="activeVersionId"
                                 :can-edit="canEdit"
                                 @select="selectVersion" @add-images="openAddImagesModal"
-                                @delete-image="handleDeleteImage" />
+                                @delete-image="handleDeleteImage" @delete-version="handleDeleteVersion"/>
                         </CardContent>
                     </Card>
                 </TabsContent>
@@ -438,6 +438,34 @@ async function handleAddImages() {
         });
     } finally {
         isSubmittingImages.value = false;
+    }
+}
+
+async function handleDeleteVersion(versionId: string, promptId?: string) {
+    if (!promptId && prompt.value) {
+        promptId = prompt.value.id;
+    }
+
+    if (!promptId) return;
+
+    if (!confirm('Are you sure you want to delete this prompt version?')) return;
+
+    try {
+        await promptStore.deletePromptVersion(versionId, promptId);
+
+        toast({
+            title: 'Image deleted',
+            description: 'Image has been deleted successfully.'
+        });
+
+        await loadPromptData(); // Refresh data to show updated images
+    } catch (error) {
+        console.error('Error deleting image:', error);
+        toast({
+            title: 'Error',
+            description: 'Failed to delete image. Please try again.',
+            variant: 'destructive'
+        });
     }
 }
 

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
+import { ref, computed, onErrorCaptured } from 'vue';
 import {
     promptService,
     type Prompt,
@@ -178,6 +178,27 @@ export const usePromptStore = defineStore('prompt', () => {
         }
     }
 
+    async function deletePromptVersion(versionId: string, promptId: string) {
+        isLoading.value = true;
+        error.value = null;
+
+        try {
+            await promptService.deletePromptVersion(versionId);
+
+            // Refresh versions if we're viewing the prompt
+            if (currentPrompt.value?.id === promptId) {
+                await fetchVersions(promptId);
+                await fetchPromptById(promptId);
+            }
+        } catch (err) {
+            error.value = 'Failed to delete version';
+            console.error('Error deleting version:', err);
+            throw err;
+        } finally {
+            isLoading.value = true;
+        }
+    }
+
     async function deleteVersionImage(imageId: string, promptId: string) {
         isLoading.value = true;
         error.value = null;
@@ -328,6 +349,7 @@ export const usePromptStore = defineStore('prompt', () => {
         deletePrompt,
         fetchVersions,
         createVersion,
+        deletePromptVersion,
         addImagesToVersion,
         deleteVersionImage,
         fetchComments,

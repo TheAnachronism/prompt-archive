@@ -32,8 +32,11 @@
                         @delete="(imageId: string) => $emit('delete-image', imageId, version.promptId)" />
                 </div>
 
-                <!-- Add images button if user can edit -->
                 <div v-if="canEdit" class="flex justify-end">
+                    <Button v-if="version.versionNumber > 1" variant="destructive" size="sm" @click="$emit('delete-version', version.id)">
+                        <PlusIcon class="h-4 w-4 mr-1" />
+                        Delete Version
+                    </Button>
                     <Button variant="outline" size="sm" @click="$emit('add-images', version.id)">
                         <PlusIcon class="h-4 w-4 mr-1" />
                         Add Images
@@ -61,6 +64,7 @@ defineEmits<{
     (e: 'select', versionId: string): void;
     (e: 'add-images', versionId: string): void;
     (e: 'delete-image', imageId: string, promptId: string): void;
+    (e: 'delete-version', versionId: string): void;
 }>();
 
 function formatDate(dateString: string): string {
