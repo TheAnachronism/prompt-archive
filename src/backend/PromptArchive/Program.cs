@@ -29,7 +29,7 @@ try
     builder.Services.Configure<S3StorageSettings>(builder.Configuration.GetSection("Storage:S3"));
     builder.Services.AddHttpContextAccessor();
     builder.Services.AddSingleton<S3StorageService>();
-    builder.Services.AddSingleton<LocalStorageSettings>();
+    builder.Services.AddSingleton<LocalStorageService>();
     builder.Services.AddSingleton(StorageServiceFactory.CreateStorageService);
 
     builder.Services.AddDbContext<ApplicationDbContext>(c =>

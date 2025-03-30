@@ -19,6 +19,7 @@ public record GetPromptVersionsCommandHandler : ICommandHandler<GetPromptVersion
     public async Task<Result<List<PromptVersion>>> ExecuteAsync(GetPromptVersionsCommand command, CancellationToken ct)
     {
         return await _dbContext.PromptVersions
+            .Include(v => v.Images)
             .Where(v => v.PromptId == command.PromptId)
             .OrderByDescending(v => v.VersionNumber)
             .ToListAsync(cancellationToken: ct);

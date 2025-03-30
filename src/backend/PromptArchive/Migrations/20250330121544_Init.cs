@@ -304,6 +304,30 @@ namespace PromptArchive.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "PromptVersionImages",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ImagePath = table.Column<string>(type: "text", nullable: false),
+                    ContentType = table.Column<string>(type: "text", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Caption = table.Column<string>(type: "text", nullable: true),
+                    OriginalFilename = table.Column<string>(type: "text", nullable: false),
+                    FileSizeBytes = table.Column<long>(type: "bigint", nullable: false),
+                    PromptVersionId = table.Column<Guid>(type: "uuid", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PromptVersionImages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_PromptVersionImages_PromptVersions_PromptVersionId",
+                        column: x => x.PromptVersionId,
+                        principalTable: "PromptVersions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -373,6 +397,11 @@ namespace PromptArchive.Migrations
                 column: "TagId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_PromptVersionImages_PromptVersionId",
+                table: "PromptVersionImages",
+                column: "PromptVersionId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_PromptVersions_PromptId",
                 table: "PromptVersions",
                 column: "PromptId");
@@ -412,7 +441,7 @@ namespace PromptArchive.Migrations
                 name: "PromptTags");
 
             migrationBuilder.DropTable(
-                name: "PromptVersions");
+                name: "PromptVersionImages");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
@@ -422,6 +451,9 @@ namespace PromptArchive.Migrations
 
             migrationBuilder.DropTable(
                 name: "Tags");
+
+            migrationBuilder.DropTable(
+                name: "PromptVersions");
 
             migrationBuilder.DropTable(
                 name: "Prompts");

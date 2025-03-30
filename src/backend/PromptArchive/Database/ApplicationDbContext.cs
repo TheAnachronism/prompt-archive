@@ -11,6 +11,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
     public DbSet<Prompt> Prompts { get; set; }
     public DbSet<PromptVersion> PromptVersions { get; set; }
+    public DbSet<PromptVersionImage> PromptVersionImages { get; set; }
     public DbSet<PromptComment> PromptComments { get; set; }
     public DbSet<Model> Models { get; set; }
     public DbSet<PromptModel> PromptModels { get; set; }
@@ -38,7 +39,7 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
         builder.Entity<PromptModel>()
             .HasKey(pt => new { pt.PromptId, pt.ModelId });
-        
+
         builder.Entity<PromptModel>()
             .HasOne(pt => pt.Prompt)
             .WithMany(p => p.PromptModels)
@@ -63,6 +64,12 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasOne(v => v.Prompt)
             .WithMany(p => p.PromptVersions)
             .HasForeignKey(v => v.PromptId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<PromptVersionImage>()
+            .HasOne(i => i.PromptVersion)
+            .WithMany(v => v.Images)
+            .HasForeignKey(i => i.PromptVersionId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.Entity<ApplicationUser>()

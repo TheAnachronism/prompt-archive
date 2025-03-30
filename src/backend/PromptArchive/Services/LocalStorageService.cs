@@ -1,3 +1,4 @@
+using FluentResults;
 using Microsoft.Extensions.Options;
 using PromptArchive.Configuration;
 
@@ -19,7 +20,8 @@ public class LocalStorageService : IStorageService
         _baseUrl = storageSettings.Value.BaseUrl ?? "/images";
     }
 
-    public async Task<string> UploadImageAsync(Stream fileStream, string fileName, string contentType)
+    public async Task<string> UploadImageAsync(Stream fileStream, string fileName, string contentType,
+        CancellationToken cancellationToken = default)
     {
         var uniqueFilename = $"{Guid.NewGuid()}_{fileName}";
 
@@ -29,12 +31,12 @@ public class LocalStorageService : IStorageService
 
         var filePath = Path.Combine(uploadPath, uniqueFilename);
         await using var fileStream2 = new FileStream(filePath, FileMode.Create);
-        await fileStream.CopyToAsync(fileStream2);
+        await fileStream.CopyToAsync(fileStream2, cancellationToken);
 
-        return Path.Combine(_uploadDirectory, uniqueFilename).Replace("\\", "/");
+        return uniqueFilename;
     }
 
-    public Task DeleteImageAsyncTask(string imagePath)
+    public Task DeleteImageAsyncTask(string imagePath, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(imagePath))
             return Task.CompletedTask;
@@ -48,14 +50,37 @@ public class LocalStorageService : IStorageService
 
     public string GetImageUrl(string imagePath)
     {
-        if (string.IsNullOrEmpty(imagePath))
-            return string.Empty;
-        
-        var request = _httpContextAccessor.HttpContext?.Request;
-        if (request is null)
-            return Path.Combine(_baseUrl, Path.GetFileName(imagePath)).Replace("\\", "/");
+        return string.IsNullOrEmpty(imagePath) ? string.Empty : $"prompts/versions/images/{Uri.EscapeDataString(imagePath)}";
+    }
 
-        var baseUrl = $"{request.Scheme}://{request.Host}";
-        return $"{baseUrl}{_baseUrl}/{Path.GetFileName(imagePath)}";
+    public Task<Result<(Stream Stream, string ContentType)>> GetImageStreamAsync(string imagePath,
+        CancellationToken cancellationToken = default)
+    {
+        var uploadDir = Path.Combine(_environment.WebRootPath, _uploadDirectory);
+        var fullPath = Path.Combine(_environment.WebRootPath, uploadDir, imagePath);
+
+        if (!File.Exists(fullPath))
+        {
+            return Task.FromResult<Result<(Stream Stream, string ContentType)>>(Result.Fail("Image not found"));
+        }
+
+        // Determine content type based on file extension
+        var contentType = GetContentTypeFromFileName(imagePath);
+        var stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read);
+
+        return Task.FromResult<Result<(Stream Stream, string ContentType)>>((stream, contentType));
+    }
+
+    private static string GetContentTypeFromFileName(string fileName)
+    {
+        var ext = Path.GetExtension(fileName).ToLowerInvariant();
+        return ext switch
+        {
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".png" => "image/png",
+            ".gif" => "image/gif",
+            ".webp" => "image/webp",
+            _ => "application/octet-stream"
+        };
     }
 }

@@ -6,6 +6,7 @@ using PromptArchive.Database;
 using PromptArchive.Extensions;
 using PromptArchive.Features.Prompts.CreatePromptVersion;
 using PromptArchive.Features.Prompts.GetPrompt;
+using PromptArchive.Services;
 
 namespace PromptArchive.Features.Prompts.CreatePrompt;
 
@@ -17,12 +18,15 @@ public class CreatePromptCommand : ICommand<Result<Prompt>>
     public ApplicationUser User { get; init; } = null!;
     public List<string> Models { get; init; } = [];
     public List<string> Tags { get; init; } = [];
+    public List<PromptVersionImageUpload> ImagesList { get; init; } = [];
 }
 
 public static class CreatePromptCommandMapper
 {
-    public static CreatePromptCommand ToCommand(this CreatePromptRequest request, ApplicationUser user) =>
-        new()
+    public static CreatePromptCommand ToCommand(this CreatePromptRequest request, ApplicationUser user,
+        List<PromptVersionImageUpload> imageList)
+    {
+        return new CreatePromptCommand
         {
             Title = request.Title,
             Description = request.Description,
@@ -30,16 +34,20 @@ public static class CreatePromptCommandMapper
             User = user,
             Tags = request.Tags,
             Models = request.Models,
+            ImagesList = imageList
         };
+    }
 }
 
 public class CreatePromptCommandHandler : ICommandHandler<CreatePromptCommand, Result<Prompt>>
 {
     private readonly ApplicationDbContext _dbContext;
+    private readonly IStorageService _storageService;
 
-    public CreatePromptCommandHandler(ApplicationDbContext dbContext)
+    public CreatePromptCommandHandler(ApplicationDbContext dbContext, IStorageService storageService)
     {
         _dbContext = dbContext;
+        _storageService = storageService;
     }
 
     public async Task<Result<Prompt>> ExecuteAsync(CreatePromptCommand command, CancellationToken ct)
@@ -70,7 +78,8 @@ public class CreatePromptCommandHandler : ICommandHandler<CreatePromptCommand, R
 
         await _dbContext.SaveChangesAsync(ct);
 
-        var versionResult = await new CreatePromptVersionCommand(prompt, command.PromptContent).ExecuteAsync();
+        var versionResult = await new CreatePromptVersionCommand(prompt, command.PromptContent, command.ImagesList)
+            .ExecuteAsync();
 
         if (versionResult.IsFailed)
             return Result.Fail(versionResult.Errors);

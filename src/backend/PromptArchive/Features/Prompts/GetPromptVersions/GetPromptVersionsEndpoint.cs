@@ -1,10 +1,18 @@
 using FastEndpoints;
 using PromptArchive.Extensions;
+using PromptArchive.Services;
 
 namespace PromptArchive.Features.Prompts.GetPromptVersions;
 
 public class GetPromptVersionsEndpoint : Endpoint<PromptIdRequest, List<PromptVersionResponse>>
 {
+    private readonly IStorageService _storageService;
+
+    public GetPromptVersionsEndpoint(IStorageService storageService)
+    {
+        _storageService = storageService;
+    }
+
     public override void Configure()
     {
         Get("prompts/{Id}/versions");
@@ -16,6 +24,6 @@ public class GetPromptVersionsEndpoint : Endpoint<PromptIdRequest, List<PromptVe
         var versionResult = await new GetPromptVersionsCommand(req.Id).ExecuteAsync(ct);
         this.ThrowIfAnyErrors(versionResult);
 
-        await SendOkAsync(versionResult.Value.Select(v => v.ToResponse()).ToList(), ct);
+        await SendOkAsync(versionResult.Value.Select(v => v.ToResponse(_storageService)).ToList(), ct);
     }
 }

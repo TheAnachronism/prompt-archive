@@ -7,6 +7,8 @@ public class PromptVersion
     public string PromptContent { get; set; } = null!;
     public int VersionNumber { get; set; }
 
+    public ICollection<PromptVersionImage> Images { get; set; } = new List<PromptVersionImage>();
+
     public Guid PromptId { get; set; }
     public Prompt Prompt { get; set; } = null!;
 }

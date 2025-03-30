@@ -1,30 +1,28 @@
 using FastEndpoints;
+using FluentResults;
 using Microsoft.AspNetCore.Identity;
 using PromptArchive.Database;
+using PromptArchive.Extensions;
 using PromptArchive.Features.Prompts.CreatePromptVersion;
-using PromptArchive.Features.Prompts.GetPrompt;
-using PromptArchive.Services;
 
-namespace PromptArchive.Features.Prompts.CreatePrompt;
+namespace PromptArchive.Features.Prompts.AddImagesToPromptVersion;
 
-public class CreatePromptEndpoint : Endpoint<CreatePromptRequest, PromptResponse>
+public class AddImagesToPromptVersionEndpoint : Endpoint<AddImagesToPromptVersionRequest, Result>
 {
     private readonly UserManager<ApplicationUser> _userManager;
-    private readonly IStorageService _storageService;
 
-    public CreatePromptEndpoint(UserManager<ApplicationUser> userManager, IStorageService storageService)
+    public AddImagesToPromptVersionEndpoint(UserManager<ApplicationUser> userManager)
     {
         _userManager = userManager;
-        _storageService = storageService;
     }
 
     public override void Configure()
     {
-        Post("prompts");
+        Post("prompts/versions/{VersionId:guid}/images");
         AllowFileUploads();
     }
 
-    public override async Task HandleAsync(CreatePromptRequest req, CancellationToken ct)
+    public override async Task HandleAsync(AddImagesToPromptVersionRequest req, CancellationToken ct)
     {
         var imageUploads = new List<PromptVersionImageUpload>();
 
@@ -50,21 +48,19 @@ public class CreatePromptEndpoint : Endpoint<CreatePromptRequest, PromptResponse
 
         var user = await _userManager.GetUserAsync(User);
         if (user is null)
-        {
-            AddError("User not found");
-            ThrowIfAnyErrors();
-            return;
-        }
+            ThrowError("User is not authenticated");
 
-        var result = await req.ToCommand(user, imageUploads).ExecuteAsync(ct);
-        if (result.IsFailed)
-        {
-            foreach (var error in result.Errors) AddError(error.Message);
-            ThrowIfAnyErrors();
-        }
-        else
-            await SendCreatedAtAsync<GetPromptByIdEndpoint>(new { result.Value.Id },
-                result.Value.ToResponse(_storageService),
-                cancellation: ct);
+        var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+
+        var result = await new AddImagesToPromptVersionCommand(
+            req.VersionId,
+            user.Id,
+            isAdmin,
+            imageUploads
+        ).ExecuteAsync(ct);
+
+        this.ThrowIfAnyErrors(result);
+
+        await SendNoContentAsync(ct);
     }
 }

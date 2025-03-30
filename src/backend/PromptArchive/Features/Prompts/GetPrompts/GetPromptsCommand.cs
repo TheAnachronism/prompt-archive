@@ -2,6 +2,7 @@ using FastEndpoints;
 using FluentResults;
 using Microsoft.EntityFrameworkCore;
 using PromptArchive.Database;
+using PromptArchive.Services;
 
 namespace PromptArchive.Features.Prompts.GetPrompts;
 
@@ -17,10 +18,12 @@ public record GetPromptsCommand(
 public class GetPromptsCommandHandler : ICommandHandler<GetPromptsCommand, Result<PromptListResponse>>
 {
     private readonly ApplicationDbContext _dbContext;
+    private readonly IStorageService _storageService;
 
-    public GetPromptsCommandHandler(ApplicationDbContext dbContext)
+    public GetPromptsCommandHandler(ApplicationDbContext dbContext, IStorageService storageService)
     {
         _dbContext = dbContext;
+        _storageService = storageService;
     }
 
     public async Task<Result<PromptListResponse>> ExecuteAsync(GetPromptsCommand command, CancellationToken ct)
@@ -33,6 +36,7 @@ public class GetPromptsCommandHandler : ICommandHandler<GetPromptsCommand, Resul
             .Include(p => p.PromptTags)
             .ThenInclude(t => t.Tag)
             .Include(p => p.PromptVersions.OrderByDescending(v => v.VersionNumber))
+            .ThenInclude(v => v.Images)
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(command.SearchTerm))
@@ -60,7 +64,7 @@ public class GetPromptsCommandHandler : ICommandHandler<GetPromptsCommand, Resul
             .Take(command.PageSize)
             .ToListAsync(cancellationToken: ct);
 
-        var responses = prompts.Select(p => p.ToResponse());
+        var responses = prompts.Select(p => p.ToResponse(_storageService));
 
         return new PromptListResponse
         {

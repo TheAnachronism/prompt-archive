@@ -12,7 +12,7 @@ using PromptArchive.Database;
 namespace PromptArchive.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250330055149_Init")]
+    [Migration("20250330121544_Init")]
     partial class Init
     {
         /// <inheritdoc />
@@ -367,6 +367,43 @@ namespace PromptArchive.Migrations
                     b.ToTable("PromptVersions");
                 });
 
+            modelBuilder.Entity("PromptArchive.Database.PromptVersionImage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Caption")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long>("FileSizeBytes")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("ImagePath")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("OriginalFilename")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("PromptVersionId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PromptVersionId");
+
+                    b.ToTable("PromptVersionImages");
+                });
+
             modelBuilder.Entity("PromptArchive.Database.Tag", b =>
                 {
                     b.Property<Guid>("Id")
@@ -519,6 +556,17 @@ namespace PromptArchive.Migrations
                     b.Navigation("Prompt");
                 });
 
+            modelBuilder.Entity("PromptArchive.Database.PromptVersionImage", b =>
+                {
+                    b.HasOne("PromptArchive.Database.PromptVersion", "PromptVersion")
+                        .WithMany("Images")
+                        .HasForeignKey("PromptVersionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PromptVersion");
+                });
+
             modelBuilder.Entity("PromptArchive.Database.ApplicationUser", b =>
                 {
                     b.Navigation("PromptComments");
@@ -540,6 +588,11 @@ namespace PromptArchive.Migrations
                     b.Navigation("PromptTags");
 
                     b.Navigation("PromptVersions");
+                });
+
+            modelBuilder.Entity("PromptArchive.Database.PromptVersion", b =>
+                {
+                    b.Navigation("Images");
                 });
 
             modelBuilder.Entity("PromptArchive.Database.Tag", b =>

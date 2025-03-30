@@ -1,4 +1,5 @@
 using PromptArchive.Database;
+using PromptArchive.Services;
 
 namespace PromptArchive.Features.Prompts;
 
@@ -20,7 +21,7 @@ public class PromptResponse
 
 public static class PromptResponseMapper
 {
-    public static PromptResponse ToResponse(this Prompt prompt) =>
+    public static PromptResponse ToResponse(this Prompt prompt, IStorageService storageService) =>
         new()
         {
             Id = prompt.Id,
@@ -33,7 +34,8 @@ public static class PromptResponseMapper
             VersionCount = prompt.PromptVersions.Count,
             Tags = prompt.PromptTags.Select(x => x.Tag.Name),
             Models = prompt.PromptModels.Select(m => m.Model.Name),
-            LatestVersion = prompt.PromptVersions.OrderByDescending(v => v.VersionNumber).First().ToResponse(),
+            LatestVersion = prompt.PromptVersions.OrderByDescending(v => v.VersionNumber).First()
+                .ToResponse(storageService),
             CommentCount = prompt.Comments.Count
         };
 }

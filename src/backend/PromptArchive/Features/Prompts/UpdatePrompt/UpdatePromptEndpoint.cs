@@ -1,10 +1,18 @@
 using FastEndpoints;
 using PromptArchive.Extensions;
+using PromptArchive.Services;
 
 namespace PromptArchive.Features.Prompts.UpdatePrompt;
 
 public class UpdatePromptEndpoint : Endpoint<UpdatePromptRequest, PromptResponse>
 {
+    private readonly IStorageService _storageService;
+
+    public UpdatePromptEndpoint(IStorageService storageService)
+    {
+        _storageService = storageService;
+    }
+
     public override void Configure()
     {
         Put("prompts/{Id:guid}");
@@ -16,6 +24,6 @@ public class UpdatePromptEndpoint : Endpoint<UpdatePromptRequest, PromptResponse
             .ExecuteAsync(ct);
         this.ThrowIfAnyErrors(result);
 
-        await SendOkAsync(result.Value.ToResponse(), ct);
+        await SendOkAsync(result.Value.ToResponse(_storageService), ct);
     }
 }

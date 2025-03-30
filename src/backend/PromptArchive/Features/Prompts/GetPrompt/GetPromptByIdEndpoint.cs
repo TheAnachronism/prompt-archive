@@ -1,10 +1,18 @@
 using FastEndpoints;
 using FluentValidation;
+using PromptArchive.Services;
 
 namespace PromptArchive.Features.Prompts.GetPrompt;
 
 public class GetPromptByIdEndpoint : Endpoint<PromptIdRequest, PromptResponse>
 {
+    private readonly IStorageService _storageService;
+
+    public GetPromptByIdEndpoint(IStorageService storageService)
+    {
+        _storageService = storageService;
+    }
+
     public override void Configure()
     {
         Get("prompts/{Id:guid}");
@@ -20,6 +28,6 @@ public class GetPromptByIdEndpoint : Endpoint<PromptIdRequest, PromptResponse>
             ThrowIfAnyErrors();
         }
 
-        await SendOkAsync(result.Value.ToResponse(), ct);
+        await SendOkAsync(result.Value.ToResponse(_storageService), ct);
     }
 }
