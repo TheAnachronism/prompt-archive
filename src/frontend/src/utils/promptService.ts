@@ -120,11 +120,11 @@ export const promptService = {
         if (prompt.images) {
             prompt.images.forEach(i => {
                 formData.append('images', i);
-
-                if (prompt.imageCaptions && Object.keys(prompt.imageCaptions).length > 0) {
-                    formData.append('ImageCaptionsJson', JSON.stringify(prompt.imageCaptions));
-                }
             });
+
+            if (prompt.imageCaptions && Object.keys(prompt.imageCaptions).length > 0) {
+                formData.append('ImageCaptionsJson', JSON.stringify(prompt.imageCaptions));
+            }
         }
 
         const { data } = await api.post('prompts', formData, {
@@ -158,11 +158,10 @@ export const promptService = {
         if (version.images) {
             version.images.forEach(image => {
                 formData.append('images', image);
-
-                if (version.imageCaptions && Object.keys(version.imageCaptions).length > 0) {
-                    formData.append('ImageCaptionsJson', JSON.stringify(version.imageCaptions));
-                }
             });
+            if (version.imageCaptions && Object.keys(version.imageCaptions).length > 0) {
+                formData.append('ImageCaptionsJson', JSON.stringify(version.imageCaptions));
+            }
         }
         const { data } = await api.post(`/prompts/${promptId}/versions`, formData, {
             headers: {
@@ -177,11 +176,11 @@ export const promptService = {
 
         images.forEach(image => {
             formData.append('images', image);
-
-            if (captions && Object.keys(captions).length > 0) {
-                formData.append('ImageCaptionsJson', JSON.stringify(captions));
-            }
         });
+
+        if (captions && Object.keys(captions).length > 0) {
+            formData.append('ImageCaptionsJson', JSON.stringify(captions));
+        }
 
         await api.post(`/prompts/versions/${versionId}/images`, formData, {
             headers: {

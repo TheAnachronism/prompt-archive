@@ -118,6 +118,7 @@
                     <Card>
                         <CardContent class="pt-6">
                             <VersionList :versions="versions" :active-version-id="activeVersionId"
+                                :can-edit="canEdit"
                                 @select="selectVersion" @add-images="openAddImagesModal"
                                 @delete-image="handleDeleteImage" />
                         </CardContent>
@@ -351,7 +352,6 @@ function openAddImagesModal(versionId: string) {
     addImagesForm.imageCaptions = {};
     showAddImagesModal.value = true;
 }
-
 
 function confirmDelete() {
     showDeleteDialog.value = true;

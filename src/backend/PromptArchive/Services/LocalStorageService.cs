@@ -1,3 +1,4 @@
+using FastEndpoints;
 using FluentResults;
 using Microsoft.Extensions.Options;
 using PromptArchive.Configuration;
@@ -50,7 +51,8 @@ public class LocalStorageService : IStorageService
 
     public string GetImageUrl(string imagePath)
     {
-        return string.IsNullOrEmpty(imagePath) ? string.Empty : $"prompts/versions/images/{Uri.EscapeDataString(imagePath)}";
+        var endpoint = _httpContextAccessor.HttpContext?.GetEndpoint()?.Metadata.GetMetadata<EndpointDefinition>();
+        return $"/api/v{endpoint!.Version.Current}/prompts/versions/images/{Uri.EscapeDataString(imagePath)}";
     }
 
     public Task<Result<(Stream Stream, string ContentType)>> GetImageStreamAsync(string imagePath,
