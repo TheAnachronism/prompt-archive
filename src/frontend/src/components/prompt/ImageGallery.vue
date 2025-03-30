@@ -3,9 +3,9 @@
         <div v-if="images.length > 0" class="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div v-for="image in images" :key="image.id" class="relative group border rounded-md overflow-hidden">
                 <img :src="image.imageUrl" :alt="image.caption || image.originalFileName"
-                    class="w-full h-48 object-cover cursor-pointer" @click="openLightbox(image)" />
-                <div
-                    class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2">
+                    class="w-full h-48 object-cover cursor-pointer" />
+                <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2"
+                    @click="openLightbox(image)">
                     <div class="flex justify-end">
                         <Button v-if="canDelete" variant="destructive" size="icon" class="h-8 w-8"
                             @click.stop="$emit('delete', image.id)">
@@ -27,26 +27,30 @@
 
         <!-- Lightbox -->
         <Dialog :open="!!selectedImage" @update:open="closeLightbox">
-            <DialogContent class="max-w-4xl p-0 overflow-hidden">
-                <div class="relative">
-                    <img v-if="selectedImage" :src="selectedImage.imageUrl"
-                        :alt="selectedImage.caption || selectedImage.originalFileName"
-                        class="w-full max-h-[80vh] object-contain" />
-                    <Button variant="ghost" size="icon"
-                        class="absolute top-2 right-2 bg-black/50 text-white hover:bg-black/70" @click="closeLightbox">
-                        <XIcon class="h-4 w-4" />
-                    </Button>
-                </div>
-                <div v-if="selectedImage" class="p-4 bg-background">
-                    <h3 class="font-medium">{{ selectedImage.originalFileName }}</h3>
-                    <p v-if="selectedImage.caption" class="text-sm text-muted-foreground">
-                        {{ selectedImage.caption }}
-                    </p>
-                    <div class="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
-                        <span>{{ formatFileSize(selectedImage.fileSizeBytes) }}</span>
-                        <span>•</span>
-                        <span>{{ formatDate(selectedImage.createdAt) }}</span>
+            <DialogContent class="max-w-4xl p-0 overflow-hidden grid grid-cols-4 gap-4">
+                <div class="col-start-2 col-span-2">
+                    <div class="relative">
+                        <img v-if="selectedImage" :src="selectedImage.imageUrl"
+                            :alt="selectedImage.caption || selectedImage.originalFileName"
+                            class="w-full max-h-[80vh] object-contain p-5" />
                     </div>
+                    <div v-if="selectedImage" class="p-4 bg-background flex flex-col items-center">
+                        <h3 class="font-medium">{{ selectedImage.originalFileName }}</h3>
+                        <p v-if="selectedImage.caption" class="text-sm text-muted-foreground">
+                            {{ selectedImage.caption }}
+                        </p>
+                        <div class="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                            <span>{{ formatFileSize(selectedImage.fileSizeBytes) }}</span>
+                            <span>•</span>
+                            <span>{{ formatDate(selectedImage.createdAt) }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="self-end p-5 flex justify-end">
+                    <Button variant="default" @click.stop="downloadImage">
+                        Download
+                        <ImageDown class="h-8 w-8" />
+                    </Button>
                 </div>
             </DialogContent>
         </Dialog>
@@ -57,7 +61,7 @@
 import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { TrashIcon, XIcon } from 'lucide-vue-next';
+import { TrashIcon, ImageDown } from 'lucide-vue-next';
 import type { PromptImage } from '@/utils/promptService';
 
 defineProps<{
@@ -87,5 +91,17 @@ function formatFileSize(bytes: number): string {
 
 function formatDate(dateString: string): string {
     return new Date(dateString).toLocaleDateString();
+}
+
+async function downloadImage() {
+    if (!selectedImage.value)
+        return;
+
+    const link = document.createElement('a');
+    link.href = selectedImage.value.imageUrl;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 </script>
