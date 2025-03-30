@@ -6,12 +6,13 @@ const router = createRouter({
   routes: [
     {
       path: '/',
+      redirect: '/prompts',
       component: () => import('@/layouts/MainLayout.vue'),
       children: [
         {
           path: '',
           name: 'home',
-          component: () =>  import('@/pages/HomeView.vue'),
+          component: () => import('@/pages/HomeView.vue'),
         },
         {
           path: 'login',
@@ -45,7 +46,30 @@ const router = createRouter({
           name: 'Settings',
           component: () => import('@/pages/SettingsView.vue'),
           meta: { requiresAuth: true }
-        }
+        },
+        {
+          path: '/prompts',
+          component: () => import('@/pages/prompt/PromptListView.vue')
+        },
+        {
+          path: '/prompts/create',
+          component: () => import('@/pages/prompt/CreatePromptView.vue'),
+          meta: { requiresAuth: true }
+        },
+        {
+          path: '/prompts/:id',
+          component: () => import('@/pages/prompt/PromptDetailView.vue')
+        },
+        {
+          path: '/prompts/:id/edit',
+          component: () => import('@/pages/prompt/EditPromptView.vue'),
+          meta: { requiresAuth: true }
+        },
+        {
+          path: '/my-prompts',
+          component: () => import('@/pages/prompt/MyPromptsView.vue'),
+          meta: { requiresAuth: true }
+        },
         // {
         //   path: 'forgot-password',
         //   name: 'forgotPassword',

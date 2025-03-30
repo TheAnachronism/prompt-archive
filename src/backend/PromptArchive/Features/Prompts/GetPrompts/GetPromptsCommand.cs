@@ -5,7 +5,8 @@ using PromptArchive.Database;
 
 namespace PromptArchive.Features.Prompts.GetPrompts;
 
-public record GetPromptsCommand(int Page, int PageSize, string? SearchTerm) : ICommand<Result<PromptListResponse>>;
+public record GetPromptsCommand(int Page, int PageSize, string? SearchTerm, string? UserId)
+    : ICommand<Result<PromptListResponse>>;
 
 public class GetPromptsCommandHandler : ICommandHandler<GetPromptsCommand, Result<PromptListResponse>>
 {
@@ -36,6 +37,8 @@ public class GetPromptsCommandHandler : ICommandHandler<GetPromptsCommand, Resul
                 (p.Description != null && p.Description.ToLower().Contains(searchTerm)) ||
                 p.PromptVersions.Any(v => v.PromptContent.ToLower().Contains(searchTerm)));
         }
+
+        if (!string.IsNullOrWhiteSpace(command.UserId)) query = query.Where(p => p.UserId == command.UserId);
 
         var totalCount = await query.CountAsync(ct);
 

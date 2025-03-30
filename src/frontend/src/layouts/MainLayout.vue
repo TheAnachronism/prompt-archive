@@ -14,9 +14,25 @@
                             <NavigationMenuList>
                                 <NavigationMenuItem>
                                     <NavigationMenuLink asChild>
-                                        <router-link to="/create"
+                                        <router-link to="/prompts"
+                                            class="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50">
+                                            Browse
+                                        </router-link>
+                                    </NavigationMenuLink>
+                                </NavigationMenuItem>
+                                <NavigationMenuItem>
+                                    <NavigationMenuLink asChild>
+                                        <router-link to="/prompts/create"
                                             class="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50">
                                             Create
+                                        </router-link>
+                                    </NavigationMenuLink>
+                                </NavigationMenuItem>
+                                <NavigationMenuItem v-if="isAuthenticated">
+                                    <NavigationMenuLink asChild>
+                                        <router-link to="/my-prompts"
+                                            class="group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50">
+                                            My Prompts
                                         </router-link>
                                     </NavigationMenuLink>
                                 </NavigationMenuItem>
@@ -49,19 +65,22 @@
                     <SheetTitle>Prompt Archive</SheetTitle>
                 </SheetHeader>
                 <nav class="flex flex-col space-y-4 mt-6">
-                    <router-link to="/" class="px-2 py-1 rounded-md hover:bg-accent hover:text-accent-foreground">
-                        Home
-                    </router-link>
-                    <router-link to="/popular"
+                    <router-link to="/prompts"
                         class="px-2 py-1 rounded-md hover:bg-accent hover:text-accent-foreground">
-                        Popular
+                        Browse Prompts
                     </router-link>
-                    <router-link to="/recent" class="px-2 py-1 rounded-md hover:bg-accent hover:text-accent-foreground">
-                        Recent
+                    <router-link to="/prompts/create"
+                        class="px-2 py-1 rounded-md hover:bg-accent hover:text-accent-foreground">
+                        Create Prompt
                     </router-link>
-                    <router-link to="/create" class="px-2 py-1 rounded-md hover:bg-accent hover:text-accent-foreground">
-                        Create
+                    <router-link v-if="isAuthenticated" to="/my-prompts"
+                        class="px-2 py-1 rounded-md hover:bg-accent hover:text-accent-foreground">
+                        My Prompts
                     </router-link>
+                    <div class="pt-2 pb-2">
+                        <Input type="search" v-model="searchQuery" placeholder="Search prompts..." class="w-full"
+                            @keyup.enter="handleSearch" />
+                    </div>
                 </nav>
             </SheetContent>
         </Sheet>
@@ -84,13 +103,13 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed } from 'vue';
+import { useRouter } from 'vue-router';
 import {
     NavigationMenu,
-    NavigationMenuContent,
     NavigationMenuItem,
     NavigationMenuLink,
     NavigationMenuList,
-    NavigationMenuTrigger,
 } from '@/components/ui/navigation-menu';
 import {
     Sheet,
@@ -104,4 +123,20 @@ import { Input } from '@/components/ui/input';
 import { Toaster } from '@/components/ui/toast';
 import { Menu } from 'lucide-vue-next';
 import UserMenu from "@/components/UserMenu.vue";
+import { useAuthStore } from '@/store/auth';
+
+const router = useRouter();
+const authStore = useAuthStore();
+const searchQuery = ref('');
+
+const isAuthenticated = computed(() => authStore.isAuthenticated);
+
+function handleSearch() {
+    if (searchQuery.value.trim()) {
+        router.push({
+            path: '/prompts',
+            query: { search: searchQuery.value.trim() }
+        });
+    }
+}
 </script>

@@ -4,7 +4,7 @@ namespace PromptArchive.Database;
 
 public static class IdentitySeeder
 {
-    public static async Task SeedRolesAndAdminAsync(IServiceProvider serviceProvider, IConfiguration configuration)
+    public static async Task SeedBaseRoles(IServiceProvider serviceProvider)
     {
         var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
         var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
@@ -14,6 +14,12 @@ public static class IdentitySeeder
         foreach (var role in roles)
             if (!await roleManager.RoleExistsAsync(role))
                 await roleManager.CreateAsync(new IdentityRole(role));
+    }
+
+    public static async Task SeedAdminUserAsync(IServiceProvider serviceProvider)
+    {
+        var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+        var configuration = serviceProvider.GetRequiredService<IConfiguration>();
 
         var initialUserConfig = configuration.GetSection("InitialUser");
         var email = initialUserConfig.GetValue<string>("Email")!;

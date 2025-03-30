@@ -1,13 +1,14 @@
 using FastEndpoints;
 using PromptArchive.Extensions;
+using PromptArchive.Features.Tags.GetTags;
 
-namespace PromptArchive.Features.Tags.GetTags;
+namespace PromptArchive.Features.Models.GetModels;
 
-public class GetTagsEndpoint : EndpointWithoutRequest<List<TagResponse>>
+public class GetModelsEndpoint : EndpointWithoutRequest<List<ModelResponse>>
 {
     public override void Configure()
     {
-        Get("tags");
+        Get("models");
         AllowAnonymous();
     }
 
@@ -16,7 +17,7 @@ public class GetTagsEndpoint : EndpointWithoutRequest<List<TagResponse>>
         var tagsResult = await new GetTagsCommand().ExecuteAsync(ct);
         this.ThrowIfAnyErrors(tagsResult);
 
-        await SendOkAsync(tagsResult.Value.Select(t => new TagResponse
+        await SendOkAsync(tagsResult.Value.Select(t => new ModelResponse
         {
             Id = t.Id,
             Name = t.Name,

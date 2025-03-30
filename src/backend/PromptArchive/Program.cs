@@ -159,11 +159,16 @@ try
     await using (var scope = app.Services.CreateAsyncScope())
     {
         var services = scope.ServiceProvider;
+        var environment = services.GetRequiredService<IHostEnvironment>();
         var dbContext = services.GetRequiredService<ApplicationDbContext>();
 
         await dbContext.Database.MigrateAsync();
 
-        await IdentitySeeder.SeedRolesAndAdminAsync(services, app.Configuration);
+        await IdentitySeeder.SeedBaseRoles(services);
+        if (environment.IsDevelopment())
+        {
+            await IdentitySeeder.SeedAdminUserAsync(services);
+        }
     }
 
     await app.RunAsync();
