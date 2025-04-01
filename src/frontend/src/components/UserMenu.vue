@@ -55,7 +55,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { computed } from 'vue';
-import { User, FileText, Settings, LogOut } from 'lucide-vue-next';
+import { FileText, Settings, LogOut } from 'lucide-vue-next';
 
 const router = useRouter();
 const { currentUser, logout, isAuthenticated } = useAuth();

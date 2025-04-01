@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref, computed, onErrorCaptured } from 'vue';
+import { ref, computed } from 'vue';
 import {
     promptService,
     type Prompt,

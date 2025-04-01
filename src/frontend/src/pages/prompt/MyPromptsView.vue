@@ -80,7 +80,7 @@ onMounted(async () => {
 
 async function loadPrompts(page = 1) {
     if (authStore.user) {
-        await promptStore.fetchPrompts(page, pageSize.value, undefined, undefined, authStore.user.id);
+        await promptStore.fetchPrompts(page, pageSize.value, undefined, [], [], authStore.user.id);
     }
 }
 
