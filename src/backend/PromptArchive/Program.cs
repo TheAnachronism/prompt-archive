@@ -156,6 +156,8 @@ try
         })
         .UseSwaggerGen();
 
+    app.MapFallbackToFile("index.html");
+
     await using (var scope = app.Services.CreateAsyncScope())
     {
         var services = scope.ServiceProvider;
