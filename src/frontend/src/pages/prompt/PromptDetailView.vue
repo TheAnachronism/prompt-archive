@@ -123,7 +123,7 @@
 
                             <VersionList :versions="versions" :active-version-id="activeVersionId" :can-edit="canEdit"
                                 @select="selectVersion" @add-images="openAddImagesModal"
-                                @delete-image="handleDeleteImage" @delete-version="handleDeleteVersion" @compare="handleCompareVersions"/>
+                                @delete-image="handleDeleteImage" @delete-version="handleDeleteVersion" @compare="handleCompareVersions" @set-thumbnail="handleSetThumbnail"/>
                         </CardContent>
                     </Card>
                 </TabsContent>
@@ -522,6 +522,24 @@ async function handleDeleteImage(imageId: string, promptId?: string) {
             title: 'Error',
             description: 'Failed to delete image. Please try again.',
             variant: 'destructive'
+        });
+    }
+}
+
+async function handleSetThumbnail(imageId: string, promptId: string) {
+    if (!promptId && prompt.value) {
+        promptId = prompt.value.id;
+    }
+
+    if (!promptId) return;
+
+    try {
+        await promptStore.setPromptThumbnail(imageId, promptId);
+    } catch (error) {
+        console.error('Error setting thumbnail for prompt:', error);
+        toast({
+            title: 'Error',
+            description: 'Failed to set thumbnail. Please try again.'
         });
     }
 }

@@ -9,6 +9,7 @@ public class Prompt
     public DateTime UpdatedAt { get; set; }
     public string UserId { get; set; } = null!;
     public ApplicationUser User { get; set; } = null!;
+    public PromptVersionImage? ThumbnailImage { get; set; }
 
     public ICollection<PromptVersion> PromptVersions { get; set; } = new List<PromptVersion>();
     public ICollection<PromptComment> Comments { get; set; } = new List<PromptComment>();

@@ -51,7 +51,7 @@
                 <div v-if="version.images?.length" class="mt-4">
                     <h4 class="text-sm font-medium mb-2">Images</h4>
                     <ImageGallery :images="version.images" :can-delete="canEdit"
-                        @delete="(imageId: string) => $emit('delete-image', imageId, version.promptId)" />
+                        @delete="(imageId: string) => $emit('delete-image', imageId, version.promptId)" @set-thumbnail="(imageId: string) => $emit('set-thumbnail', imageId, version.promptId)" />
                 </div>
 
                 <div v-if="canEdit" class="flex justify-end">
@@ -91,6 +91,7 @@ const emit = defineEmits<{
     (e: 'delete-image', imageId: string, promptId: string): void;
     (e: 'delete-version', versionId: string): void;
     (e: 'compare', oldVersionId: string, newVersionId: string): void;
+    (e: 'set-thumbnail', imageId: string, promptId: string): void;
 }>();
 
 const compareMode = ref(false);

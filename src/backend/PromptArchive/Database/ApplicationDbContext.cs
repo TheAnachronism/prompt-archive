@@ -87,5 +87,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
             .HasOne(c => c.User)
             .WithMany(u => u.PromptComments)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Entity<Prompt>()
+            .HasOne(x => x.ThumbnailImage);
     }
 }

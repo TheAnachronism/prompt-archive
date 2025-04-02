@@ -12,7 +12,7 @@ using PromptArchive.Database;
 namespace PromptArchive.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250402185209_Init")]
+    [Migration("20250402230637_Init")]
     partial class Init
     {
         /// <inheritdoc />
@@ -261,6 +261,9 @@ namespace PromptArchive.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("text");
 
+                    b.Property<Guid?>("ThumbnailImageId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
@@ -273,6 +276,8 @@ namespace PromptArchive.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ThumbnailImageId");
 
                     b.HasIndex("UserId");
 
@@ -482,11 +487,17 @@ namespace PromptArchive.Migrations
 
             modelBuilder.Entity("PromptArchive.Database.Prompt", b =>
                 {
+                    b.HasOne("PromptArchive.Database.PromptVersionImage", "ThumbnailImage")
+                        .WithMany()
+                        .HasForeignKey("ThumbnailImageId");
+
                     b.HasOne("PromptArchive.Database.ApplicationUser", "User")
                         .WithMany("Prompts")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("ThumbnailImage");
 
                     b.Navigation("User");
                 });

@@ -220,6 +220,27 @@ export const usePromptStore = defineStore('prompt', () => {
         }
     }
 
+    async function setPromptThumbnail(imageId: string, promptId: string) {
+        isLoading.value = true;
+        error.value = null;
+
+        try {
+            await promptService.setPromptThumbnail(imageId, promptId);
+
+            if (currentPrompt.value?.id === promptId) {
+                await fetchVersions(promptId);
+                await fetchPromptById(promptId);
+            }
+        } catch (err) {
+            error.value = 'Failed to set thumbnail';
+            console.error('Error setting thumbnail:', err);
+            throw err;
+
+        } finally {
+            isLoading.value = false;
+        }
+    }
+
     async function fetchComments(promptId: string) {
         isLoading.value = true;
         error.value = null;
@@ -352,6 +373,7 @@ export const usePromptStore = defineStore('prompt', () => {
         deletePromptVersion,
         addImagesToVersion,
         deleteVersionImage,
+        setPromptThumbnail,
         fetchComments,
         addComment,
         updateComment,

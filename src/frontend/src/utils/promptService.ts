@@ -11,6 +11,7 @@ export interface Prompt {
     tags: string[];
     models: string[];
     latestVersion?: PromptVersion;
+    thumbnailImage?: PromptImage;
     versionCount: number;
     commentCount: number;
 }
@@ -196,6 +197,9 @@ export const promptService = {
 
     deleteVersionImage: async (imageId: string): Promise<void> => {
         await api.delete(`/prompts/versions/images/${imageId}`);
+    },
+    setPromptThumbnail: async (imageId: string, promptId: string): Promise<void> => {
+        await api.put(`/prompts/${promptId}/thumbnail/${imageId}`, {});
     },
 
     getComments: async (promptId: string): Promise<PromptComment[]> => {

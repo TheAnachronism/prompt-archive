@@ -16,6 +16,7 @@ public class PromptResponse
     public IEnumerable<string> Models { get; set; } = [];
     public int VersionCount { get; init; }
     public PromptVersionResponse LatestVersion { get; init; } = null!;
+    public PromptVersionImageResponse? ThumbnailImage { get; set; }
     public int CommentCount { get; init; }
 }
 
@@ -36,6 +37,7 @@ public static class PromptResponseMapper
             Models = prompt.PromptModels.Select(m => m.Model.Name),
             LatestVersion = prompt.PromptVersions.OrderByDescending(v => v.VersionNumber).First()
                 .ToResponse(storageService),
-            CommentCount = prompt.Comments.Count
+            CommentCount = prompt.Comments.Count,
+            ThumbnailImage = prompt.ThumbnailImage?.ToResponse(storageService)
         };
 }

@@ -12,18 +12,21 @@
             </CardDescription>
         </CardHeader>
         <CardContent class="flex-grow">
-            <div v-if="prompt.latestVersion?.images?.length && prompt.latestVersion?.images?.length > 0" class="mb-4 relative group overflow-visible">
-                <img :src="prompt.latestVersion.images[0].thumbnailUrl"
-                    :alt="prompt.latestVersion.images[0].caption || prompt.title"
+            <div v-if="prompt.latestVersion?.images?.length && prompt.latestVersion?.images?.length > 0"
+                class="mb-4 relative group overflow-visible">
+                <img :src="thumbnailImage?.thumbnailUrl ?? thumbnailImage?.imageUrl"
+                    :alt="thumbnailImage?.caption || prompt.title"
                     class="w-full h-48 object-cover rounded-md" />
                 <div class="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-30 pointer-events-none flex justify-center items-center"
                     style="inset: -10rem;">
                     <div class="absolute bg-black/90 backdrop-blur-sm rounded-lg shadow-xl overflow-hidden">
-                        <img :src="prompt.latestVersion.images[0].thumbnailUrl" :alt="prompt.latestVersion.images[0].caption || prompt.latestVersion.images[0].originalFileName"
+                        <img :src="thumbnailImage?.thumbnailUrl ?? thumbnailImage?.imageUrl"
+                            :alt="thumbnailImage?.caption || thumbnailImage?.originalFileName || prompt.latestVersion?.images[0].caption || prompt.latestVersion.images[0].originalFileName"
                             class="w-full h-full object-contain p-4" />
                         <div class="absolute bottom-0 left-0 right-0 bg-black/80 p-2 text-white">
-                            <p class="truncate text-sm">{{ prompt.latestVersion.images[0].originalFileName }}</p>
-                            <p v-if="prompt.latestVersion.images[0].caption" class="text-xs opacity-80 truncate">{{ prompt.latestVersion.images[0].caption }}</p>
+                            <p class="truncate text-sm">{{ thumbnailImage?.originalFileName }}</p>
+                            <p v-if="thumbnailImage?.caption" class="text-xs opacity-80 truncate">{{
+                                thumbnailImage?.caption }}</p>
                         </div>
                     </div>
                 </div>
@@ -69,13 +72,18 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { type Prompt } from '@/utils/promptService';
 
-defineProps<{
+const props = defineProps<{
     prompt: Prompt;
 }>();
+
+const thumbnailImage = computed(() => {
+    return props.prompt.thumbnailImage ?? props.prompt.latestVersion?.images[0]
+});
 
 function formatDate(dateString: string): string {
     const date = new Date(dateString);

@@ -45,16 +45,23 @@
                         </div>
                     </div>
                 </div>
-                <div class="self-end p-5 flex justify-end gap-2">
-                    <Button v-if="canDelete" variant="destructive"
-                        @click.stop="$emit('delete', selectedImage?.id || '')">
-                        Delete
-                        <TrashIcon class="h-8 w-8" />
+                <div class=" p-5 self-end flex flex-col justify-end gap-2">
+                    <Button v-if="canDelete"
+                        @click.stop="$emit('setThumbnail', selectedImage?.id || '')">
+                        Set as Thumbnail
+                        <Image class="h-8 w-8" />
                     </Button>
-                    <Button variant="default" @click.stop="downloadImage">
-                        Download
-                        <ImageDown class="h-8 w-8" />
-                    </Button>
+                    <div class="flex justify-end gap-2">
+                        <Button v-if="canDelete" variant="destructive"
+                            @click.stop="$emit('delete', selectedImage?.id || '')">
+                            Delete
+                            <TrashIcon class="h-8 w-8" />
+                        </Button>
+                        <Button variant="default" @click.stop="downloadImage">
+                            Download
+                            <ImageDown class="h-8 w-8" />
+                        </Button>
+                    </div>
                 </div>
             </DialogContent>
         </Dialog>
@@ -65,7 +72,7 @@
 import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import { TrashIcon, ImageDown } from 'lucide-vue-next';
+import { TrashIcon, ImageDown, Image } from 'lucide-vue-next';
 import type { PromptImage } from '@/utils/promptService';
 
 defineProps<{
@@ -75,6 +82,7 @@ defineProps<{
 
 defineEmits<{
     (e: 'delete', imageId: string): void;
+    (e: 'setThumbnail', imageId: string): void;
 }>();
 
 const selectedImage = ref<PromptImage | null>(null);

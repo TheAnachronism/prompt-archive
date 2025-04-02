@@ -186,28 +186,6 @@ namespace PromptArchive.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Prompts",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Title = table.Column<string>(type: "text", nullable: false),
-                    Description = table.Column<string>(type: "text", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UserId = table.Column<string>(type: "text", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Prompts", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Prompts_AspNetUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "PromptComments",
                 columns: table => new
                 {
@@ -225,12 +203,6 @@ namespace PromptArchive.Migrations
                         name: "FK_PromptComments_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_PromptComments_Prompts_PromptId",
-                        column: x => x.PromptId,
-                        principalTable: "Prompts",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -251,10 +223,27 @@ namespace PromptArchive.Migrations
                         principalTable: "Models",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Prompts",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Title = table.Column<string>(type: "text", nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UserId = table.Column<string>(type: "text", nullable: false),
+                    ThumbnailImageId = table.Column<Guid>(type: "uuid", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Prompts", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_PromptModels_Prompts_PromptId",
-                        column: x => x.PromptId,
-                        principalTable: "Prompts",
+                        name: "FK_Prompts_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -388,6 +377,11 @@ namespace PromptArchive.Migrations
                 column: "ModelId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Prompts_ThumbnailImageId",
+                table: "Prompts",
+                column: "ThumbnailImageId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Prompts_UserId",
                 table: "Prompts",
                 column: "UserId");
@@ -412,11 +406,42 @@ namespace PromptArchive.Migrations
                 table: "Tags",
                 column: "NormalizedName",
                 unique: true);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_PromptComments_Prompts_PromptId",
+                table: "PromptComments",
+                column: "PromptId",
+                principalTable: "Prompts",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_PromptModels_Prompts_PromptId",
+                table: "PromptModels",
+                column: "PromptId",
+                principalTable: "Prompts",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Prompts_PromptVersionImages_ThumbnailImageId",
+                table: "Prompts",
+                column: "ThumbnailImageId",
+                principalTable: "PromptVersionImages",
+                principalColumn: "Id");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropForeignKey(
+                name: "FK_Prompts_AspNetUsers_UserId",
+                table: "Prompts");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_PromptVersions_Prompts_PromptId",
+                table: "PromptVersions");
+
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
 
@@ -442,9 +467,6 @@ namespace PromptArchive.Migrations
                 name: "PromptTags");
 
             migrationBuilder.DropTable(
-                name: "PromptVersionImages");
-
-            migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
@@ -454,13 +476,16 @@ namespace PromptArchive.Migrations
                 name: "Tags");
 
             migrationBuilder.DropTable(
-                name: "PromptVersions");
+                name: "AspNetUsers");
 
             migrationBuilder.DropTable(
                 name: "Prompts");
 
             migrationBuilder.DropTable(
-                name: "AspNetUsers");
+                name: "PromptVersionImages");
+
+            migrationBuilder.DropTable(
+                name: "PromptVersions");
         }
     }
 }
