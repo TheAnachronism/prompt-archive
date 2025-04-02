@@ -29,6 +29,7 @@ export interface PromptVersion {
 export interface PromptImage {
     id: string;
     imageUrl: string;
+    thumbnailUrl: string;
     caption?: string;
     createdAt: string;
     originalFileName: string;

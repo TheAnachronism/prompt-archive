@@ -41,18 +41,34 @@ public class AddImagesToPromptVersionCommandHandler : ICommandHandler<AddImagesT
         {
             try
             {
-                var imagePath = await _storageService.UploadImageAsync(imageUpload.ImageStream, imageUpload.FileName,
-                    imageUpload.ContentType, ct);
+                var imageStreamCopy = new MemoryStream();
+                await imageUpload.ImageStream.CopyToAsync(imageStreamCopy, ct);
+
+                imageUpload.ImageStream.Position = 0;
+                imageStreamCopy.Position = 0;
+
+                var imagePath = await _storageService.UploadImageAsync(
+                    imageUpload.ImageStream,
+                    imageUpload.FileName,
+                    imageUpload.ContentType,
+                    ct);
+
+                var thumbnailPath = await _storageService.UploadThumbnailAsync(
+                    imageStreamCopy,
+                    imageUpload.FileName,
+                    imageUpload.ContentType,
+                    ct);
 
                 var image = new PromptVersionImage
                 {
                     ImagePath = imagePath,
+                    ThumbnailPath = thumbnailPath,
                     ContentType = imageUpload.ContentType,
                     Caption = imageUpload.Caption,
                     CreatedAt = DateTime.UtcNow,
                     PromptVersion = version,
-                    FileSizeBytes = imageUpload.FileSize,
-                    OriginalFilename = imageUpload.FileName
+                    OriginalFilename = imageUpload.FileName,
+                    FileSizeBytes = imageUpload.FileSize
                 };
 
                 await _dbContext.PromptVersionImages.AddAsync(image, ct);

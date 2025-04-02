@@ -1,24 +1,23 @@
 <template>
     <div class="space-y-4">
         <div v-if="images.length > 0" class="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <div v-for="image in images" :key="image.id" class="relative group border rounded-md overflow-hidden">
-                <img :src="image.imageUrl" :alt="image.caption || image.originalFileName"
+            <div v-for="image in images" :key="image.id" class="relative group border rounded-md overflow-visible">
+                <img :src="image.thumbnailUrl" :alt="image.caption || image.originalFileName" loading="lazy"
                     class="w-full h-48 object-cover cursor-pointer" />
-                <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2"
-                    @click="openLightbox(image)">
-                    <div class="flex justify-end">
-                        <Button v-if="canDelete" variant="destructive" size="icon" class="h-8 w-8"
-                            @click.stop="$emit('delete', image.id)">
-                            <TrashIcon class="h-4 w-4" />
-                        </Button>
-                    </div>
-                    <div class="bg-black/70 p-2 text-white text-sm">
-                        <p class="truncate">{{ image.originalFileName }}</p>
-                        <p v-if="image.caption" class="text-xs opacity-80 truncate">
-                            {{ image.caption }}
-                        </p>
+                <div class="absolute opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-30 pointer-events-none flex justify-center items-center"
+                    style="inset: -10rem;">
+                    <div class="absolute bg-black/90 backdrop-blur-sm rounded-lg shadow-xl overflow-hidden">
+                        <img :src="image.thumbnailUrl" :alt="image.caption || image.originalFileName"
+                            class="w-full h-full object-contain p-4" />
+                        <div class="absolute bottom-0 left-0 right-0 bg-black/80 p-2 text-white">
+                            <p class="truncate text-sm">{{ image.originalFileName }}</p>
+                            <p v-if="image.caption" class="text-xs opacity-80 truncate">{{ image.caption }}</p>
+                        </div>
                     </div>
                 </div>
+
+                <div class="absolute inset-0 cursor-pointer z-20" @click="openLightbox(image)"></div>
+
             </div>
         </div>
         <div v-else class="text-center py-8 text-muted-foreground">
@@ -46,7 +45,12 @@
                         </div>
                     </div>
                 </div>
-                <div class="self-end p-5 flex justify-end">
+                <div class="self-end p-5 flex justify-end gap-2">
+                    <Button v-if="canDelete" variant="destructive"
+                        @click.stop="$emit('delete', selectedImage?.id || '')">
+                        Delete
+                        <TrashIcon class="h-8 w-8" />
+                    </Button>
                     <Button variant="default" @click.stop="downloadImage">
                         Download
                         <ImageDown class="h-8 w-8" />
@@ -74,6 +78,7 @@ defineEmits<{
 }>();
 
 const selectedImage = ref<PromptImage | null>(null);
+const isDownloading = ref(false);
 
 function openLightbox(image: PromptImage) {
     selectedImage.value = image;
@@ -97,11 +102,26 @@ async function downloadImage() {
     if (!selectedImage.value)
         return;
 
-    const link = document.createElement('a');
-    link.href = selectedImage.value.imageUrl;
+    isDownloading.value = true;
 
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+        const response = await fetch(selectedImage.value.imageUrl);
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = selectedImage.value.originalFileName;
+        document.body.appendChild(link);
+        link.click();
+
+        // Clean up
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(link);
+    } catch (error) {
+        console.error('Download failed:', error);
+    } finally {
+        isDownloading.value = false;
+    }
 }
 </script>

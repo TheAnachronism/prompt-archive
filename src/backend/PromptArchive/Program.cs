@@ -3,6 +3,7 @@ using FastEndpoints;
 using FastEndpoints.Swagger;
 using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using PromptArchive.Configuration;
@@ -162,6 +163,11 @@ try
                 s.Version = "v1";
             };
         });
+
+    builder.Services.Configure<KestrelServerOptions>(o =>
+    {
+        o.Limits.MaxRequestBodySize = builder.Configuration.GetValue<int>("MaxUploadSize");
+    });
 
     var app = builder.Build();
 

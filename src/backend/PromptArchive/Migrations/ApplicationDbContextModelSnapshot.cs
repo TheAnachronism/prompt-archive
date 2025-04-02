@@ -394,6 +394,9 @@ namespace PromptArchive.Migrations
                     b.Property<Guid>("PromptVersionId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("ThumbnailPath")
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.HasIndex("PromptVersionId");

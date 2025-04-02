@@ -5,6 +5,8 @@ using Minio;
 using Minio.DataModel.Args;
 using Minio.Exceptions;
 using PromptArchive.Configuration;
+using PromptArchive.Extensions;
+using SkiaSharp;
 
 namespace PromptArchive.Services;
 
@@ -64,7 +66,7 @@ public class S3StorageService : IStorageService
             throw;
         }
     }
-
+    
     public async Task<string> UploadImageAsync(Stream fileStream, string fileName, string contentType,
         CancellationToken cancellationToken = default)
     {
@@ -94,6 +96,36 @@ public class S3StorageService : IStorageService
         }
     }
 
+    public async Task<string> UploadThumbnailAsync(Stream fileStream, string originalFileName, string contentType,
+        CancellationToken cancellationToken = default)
+    {
+        using var thumbnailStream = ThumbnailHelper.GenerateThumbnail(fileStream);
+
+        var uniqueFileName = $"{Guid.NewGuid()}_thumb_{originalFileName}";
+        var key = $"thumbnails/{uniqueFileName}";
+
+        var putRequest = new PutObjectArgs()
+            .WithBucket(_bucketName)
+            .WithObject(key)
+            .WithStreamData(thumbnailStream)
+            .WithObjectSize(thumbnailStream.Length)
+            .WithContentType(contentType);
+
+        try
+        {
+            await _s3Client.PutObjectAsync(putRequest, cancellationToken);
+            _logger.LogInformation("Successfully uploaded thumbnail {FileName} to {BucketName}", uniqueFileName,
+                _bucketName);
+
+            return uniqueFileName;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to upload thumbnail {FileName} to {BucketName}", uniqueFileName, _bucketName);
+            throw;
+        }
+    }
+
     public async Task DeleteImageAsyncTask(string imagePath, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(imagePath))
@@ -115,10 +147,39 @@ public class S3StorageService : IStorageService
         }
     }
 
+    public async Task DeleteThumbnailAsyncTask(string thumbnailPath, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrEmpty(thumbnailPath))
+            return;
+
+        var deleteRequest = new RemoveObjectArgs()
+            .WithBucket(_bucketName)
+            .WithObject($"thumbnails/{thumbnailPath}");
+
+        try
+        {
+            await _s3Client.RemoveObjectAsync(deleteRequest, cancellationToken);
+            _logger.LogInformation("Successfully deleted thumbnail {ThumbnailPath} from {BucketName}", thumbnailPath,
+                _bucketName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to delete thumbnail {ThumbnailPath} from {BucketName}", thumbnailPath,
+                _bucketName);
+            throw;
+        }
+    }
+
     public string GetImageUrl(string imagePath)
     {
         var endpoint = _httpContextAccessor.HttpContext?.GetEndpoint()?.Metadata.GetMetadata<EndpointDefinition>();
         return $"/api/v{endpoint!.Version.Current}/prompts/versions/images/{Uri.EscapeDataString(imagePath)}";
+    }
+
+    public string GetThumbnailUrl(string imagePath)
+    {
+        var endpoint = _httpContextAccessor.HttpContext?.GetEndpoint()?.Metadata.GetMetadata<EndpointDefinition>();
+        return $"/api/v{endpoint!.Version.Current}/prompts/versions/thumbnails/{Uri.EscapeDataString(imagePath)}";
     }
 
     public async Task<Result<(Stream Stream, string ContentType)>> GetImageStreamAsync(string imagePath,
@@ -158,6 +219,47 @@ public class S3StorageService : IStorageService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error retrieving image {ImagePath} from {BucketName}", imagePath, _bucketName);
+            return Result.Fail(ex.Message);
+        }
+    }
+
+    public async Task<Result<(Stream Stream, string ContentType)>> GetThumbnailStreamAsync(string imagePath,
+        CancellationToken cancellationToken = default)
+    {
+        var path = $"thumbnails/{imagePath}";
+        try
+        {
+            var statObjectArgs = new StatObjectArgs()
+                .WithBucket(_bucketName)
+                .WithObject(path);
+
+            // Get object metadata to check if it exists and get content type
+            var objectStat = await _s3Client.StatObjectAsync(statObjectArgs, cancellationToken);
+
+            // Create a memory stream to hold the object data
+            var memoryStream = new MemoryStream();
+
+            var getObjectArgs = new GetObjectArgs()
+                .WithBucket(_bucketName)
+                .WithObject(path)
+                .WithCallbackStream(stream =>
+                {
+                    stream.CopyTo(memoryStream);
+                    memoryStream.Position = 0;
+                });
+
+            await _s3Client.GetObjectAsync(getObjectArgs, cancellationToken);
+
+            return (memoryStream, objectStat.ContentType);
+        }
+        catch (ObjectNotFoundException)
+        {
+            _logger.LogWarning("Thumbnail not found: {ImagePath} in bucket {BucketName}", imagePath, _bucketName);
+            return Result.Fail("Thumbnail not found");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving thumbnail {ImagePath} from {BucketName}", imagePath, _bucketName);
             return Result.Fail(ex.Message);
         }
     }

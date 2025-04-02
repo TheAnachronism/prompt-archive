@@ -29,7 +29,9 @@ public class AddImagesToPromptVersionRequest
 
 public class AddImagesToPromptVersionRequestValidator : Validator<AddImagesToPromptVersionRequest>
 {
-    public AddImagesToPromptVersionRequestValidator()
+    private static readonly string[] FileFormats = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+
+    public AddImagesToPromptVersionRequestValidator(IConfiguration configuration)
     {
         RuleFor(x => x.VersionId).NotEmpty();
 
@@ -42,12 +44,9 @@ public class AddImagesToPromptVersionRequestValidator : Validator<AddImagesToPro
             {
                 if (file == null) return false;
 
-                // Check file size (e.g., 10MB max)
-                if (file.Length > 10 * 1024 * 1024) return false;
+                if (file.Length > configuration.GetValue<int>("MaxUploadSize")) return false;
 
-                // Check file type
-                var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
-                return allowedTypes.Contains(file.ContentType);
+                return FileFormats.Contains(file.ContentType);
             })
             .WithMessage("Invalid image file. Only JPEG, PNG, GIF, and WebP files under 10MB are allowed.");
     }

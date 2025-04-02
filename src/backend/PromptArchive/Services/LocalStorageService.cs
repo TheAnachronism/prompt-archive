@@ -2,6 +2,7 @@ using FastEndpoints;
 using FluentResults;
 using Microsoft.Extensions.Options;
 using PromptArchive.Configuration;
+using PromptArchive.Extensions;
 
 namespace PromptArchive.Services;
 
@@ -37,6 +38,24 @@ public class LocalStorageService : IStorageService
         return uniqueFilename;
     }
 
+    public async Task<string> UploadThumbnailAsync(Stream fileStream, string originalFileName, string contentType,
+        CancellationToken cancellationToken = default)
+    {
+        using var thumbnailStream = ThumbnailHelper.GenerateThumbnail(fileStream);
+        
+        var uniqueFilename = $"{Guid.NewGuid()}_{originalFileName}";
+
+        var uploadPath = Path.Combine(_environment.WebRootPath, _uploadDirectory, "thumbnails");
+        if (!Directory.Exists(uploadPath))
+            Directory.CreateDirectory(uploadPath);
+
+        var filePath = Path.Combine(uploadPath, uniqueFilename);
+        await using var fileStream2 = new FileStream(filePath, FileMode.Create);
+        await thumbnailStream.CopyToAsync(fileStream2, cancellationToken);
+
+        return uniqueFilename;
+    }
+
     public Task DeleteImageAsyncTask(string imagePath, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(imagePath))
@@ -49,10 +68,28 @@ public class LocalStorageService : IStorageService
         return Task.CompletedTask;
     }
 
+    public Task DeleteThumbnailAsyncTask(string thumbnailPath, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrEmpty(thumbnailPath))
+            return Task.CompletedTask;
+
+        var fullPath = Path.Combine(_environment.WebRootPath, _uploadDirectory, "thumbnails", thumbnailPath);
+        if (File.Exists(fullPath))
+            File.Delete(fullPath);
+
+        return Task.CompletedTask;
+    }
+
     public string GetImageUrl(string imagePath)
     {
         var endpoint = _httpContextAccessor.HttpContext?.GetEndpoint()?.Metadata.GetMetadata<EndpointDefinition>();
         return $"/api/v{endpoint!.Version.Current}/prompts/versions/images/{Uri.EscapeDataString(imagePath)}";
+    }
+
+    public string GetThumbnailUrl(string imagePath)
+    {
+        var endpoint = _httpContextAccessor.HttpContext?.GetEndpoint()?.Metadata.GetMetadata<EndpointDefinition>();
+        return $"/api/v{endpoint!.Version.Current}/prompts/versions/thumbnails/{Uri.EscapeDataString(imagePath)}";
     }
 
     public Task<Result<(Stream Stream, string ContentType)>> GetImageStreamAsync(string imagePath,
@@ -67,6 +104,21 @@ public class LocalStorageService : IStorageService
         }
 
         // Determine content type based on file extension
+        var contentType = GetContentTypeFromFileName(imagePath);
+        var stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read);
+
+        return Task.FromResult<Result<(Stream Stream, string ContentType)>>((stream, contentType));
+    }
+
+    public Task<Result<(Stream Stream, string ContentType)>> GetThumbnailStreamAsync(string imagePath, CancellationToken cancellationToken = default)
+    {
+        var fullPath = Path.Combine(_environment.WebRootPath, _uploadDirectory, "thumbnails", imagePath);
+
+        if (!File.Exists(fullPath))
+        {
+            return Task.FromResult<Result<(Stream Stream, string ContentType)>>(Result.Fail("Thumbnail not found"));
+        }
+
         var contentType = GetContentTypeFromFileName(imagePath);
         var stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read);
 

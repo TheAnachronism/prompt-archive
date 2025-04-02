@@ -12,7 +12,7 @@ using PromptArchive.Database;
 namespace PromptArchive.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250330121544_Init")]
+    [Migration("20250402185209_Init")]
     partial class Init
     {
         /// <inheritdoc />
@@ -396,6 +396,9 @@ namespace PromptArchive.Migrations
 
                     b.Property<Guid>("PromptVersionId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("ThumbnailPath")
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 

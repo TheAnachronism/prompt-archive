@@ -37,9 +37,27 @@ public class DownloadPromptVersionImageEndpoint : Endpoint<PromptIdRequest>
             await SendNotFoundAsync(ct);
             return;
         }
-        
+
+        HttpContext.Response.Headers.CacheControl = "public, max-age=86400";
         HttpContext.Response.Headers.ContentDisposition
             = $"attachment; filename=\"{Uri.EscapeDataString(image.OriginalFilename)}\"";
-        await SendStreamAsync(result.Value.Stream, cancellation: ct);
+
+        var contentType = GetContentTypeFromFileName(image.OriginalFilename);
+        HttpContext.Response.ContentType = contentType;
+
+        await SendStreamAsync(result.Value.Stream, contentType, cancellation: ct);
+    }
+
+    private static string GetContentTypeFromFileName(string fileName)
+    {
+        var extension = Path.GetExtension(fileName).ToLowerInvariant();
+        return extension switch
+        {
+            ".jpg" or ".jpeg" => "image/jpeg",
+            ".png" => "image/png",
+            ".gif" => "image/gif",
+            ".webp" => "image/webp",
+            _ => "application/octet-stream"
+        };
     }
 }

@@ -310,6 +310,7 @@ namespace PromptArchive.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     ImagePath = table.Column<string>(type: "text", nullable: false),
+                    ThumbnailPath = table.Column<string>(type: "text", nullable: true),
                     ContentType = table.Column<string>(type: "text", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     Caption = table.Column<string>(type: "text", nullable: true),

@@ -31,7 +31,7 @@ public class CreatePromptVersionRequestValidator : Validator<CreatePromptVersion
 {
     private static readonly string[] AllowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
 
-    public CreatePromptVersionRequestValidator()
+    public CreatePromptVersionRequestValidator(IConfiguration configuration)
     {
         RuleFor(x => x.Id).NotEmpty();
         RuleFor(x => x.PromptContent).NotEmpty();
@@ -39,10 +39,12 @@ public class CreatePromptVersionRequestValidator : Validator<CreatePromptVersion
         RuleForEach(x => x.Images)
             .Must(file =>
             {
-                if (file is null) return true;
+                if (file == null) return false;
 
-                return file.Length <= 50 * 1024 * 1024 && AllowedTypes.Contains(file.ContentType);
+                if (file.Length > configuration.GetValue<int>("MaxUploadSize")) return false;
+
+                return AllowedTypes.Contains(file.ContentType);
             })
-            .WithMessage("Invalid image file. Only JPEG, PNG, GIF and WebP files under 50 MB are allowed.");
+            .WithMessage("Invalid image file. Only JPEG, PNG, GIF, and WebP files under 10MB are allowed.");
     }
 }

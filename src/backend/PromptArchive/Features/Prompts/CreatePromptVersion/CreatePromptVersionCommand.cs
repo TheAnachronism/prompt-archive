@@ -23,11 +23,13 @@ public class CreatePromptVersionCommandHandler : ICommandHandler<CreatePromptVer
 {
     private readonly ApplicationDbContext _dbContext;
     private readonly IStorageService _storageService;
+    private readonly ILogger<CreatePromptVersionCommandHandler> _logger;
 
-    public CreatePromptVersionCommandHandler(ApplicationDbContext dbContext, IStorageService storageService)
+    public CreatePromptVersionCommandHandler(ApplicationDbContext dbContext, IStorageService storageService, ILogger<CreatePromptVersionCommandHandler> logger)
     {
         _dbContext = dbContext;
         _storageService = storageService;
+        _logger = logger;
     }
 
     public async Task<Result> ExecuteAsync(CreatePromptVersionCommand command, CancellationToken ct)
@@ -53,12 +55,28 @@ public class CreatePromptVersionCommandHandler : ICommandHandler<CreatePromptVer
             {
                 try
                 {
-                    var imagePath = await _storageService.UploadImageAsync(imageUpload.ImageStream,
-                        imageUpload.FileName, imageUpload.ContentType, ct);
+                    var imageStreamCopy = new MemoryStream();
+                    await imageUpload.ImageStream.CopyToAsync(imageStreamCopy, ct);
+
+                    imageUpload.ImageStream.Position = 0;
+                    imageStreamCopy.Position = 0;
+
+                    var imagePath = await _storageService.UploadImageAsync(
+                        imageUpload.ImageStream,
+                        imageUpload.FileName,
+                        imageUpload.ContentType,
+                        ct);
+
+                    var thumbnailPath = await _storageService.UploadThumbnailAsync(
+                        imageStreamCopy,
+                        imageUpload.FileName,
+                        imageUpload.ContentType,
+                        ct);
 
                     var image = new PromptVersionImage
                     {
                         ImagePath = imagePath,
+                        ThumbnailPath = thumbnailPath,
                         ContentType = imageUpload.ContentType,
                         Caption = imageUpload.Caption,
                         CreatedAt = DateTime.UtcNow,
@@ -71,6 +89,7 @@ public class CreatePromptVersionCommandHandler : ICommandHandler<CreatePromptVer
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError(ex, "Failed to create prompt version image: {FileName}.", imageUpload.FileName);
                     return Result.Fail(ex.Message);
                 }
             }

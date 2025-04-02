@@ -17,6 +17,7 @@ public class PromptVersionImageResponse
 {
     public Guid Id { get; init; }
     public string ImageUrl { get; init; } = string.Empty;
+    public string ThumbnailUrl { get; set; } = string.Empty;
     public string? Caption { get; init; }
     public DateTime CreatedAt { get; init; }
     public string OriginalFileName { get; set; } = null!;
@@ -41,6 +42,9 @@ public static class PromptVersionResponseMapper
     {
         Id = promptVersionImage.Id,
         ImageUrl = storageService.GetImageUrl(promptVersionImage.Id.ToString()),
+        ThumbnailUrl = promptVersionImage.ThumbnailPath != null 
+            ? storageService.GetThumbnailUrl(promptVersionImage.Id.ToString()) 
+            : storageService.GetImageUrl(promptVersionImage.Id.ToString()),
         Caption = promptVersionImage.Caption,
         CreatedAt = promptVersionImage.CreatedAt,
         OriginalFileName = promptVersionImage.OriginalFilename,

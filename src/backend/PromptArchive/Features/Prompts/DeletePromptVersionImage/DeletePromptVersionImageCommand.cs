@@ -34,6 +34,8 @@ public class DeletePromptVersionImageCommandHandler : ICommandHandler<DeleteProm
             return Result.Fail("User is not authorized to delete this image");
 
         await _storageService.DeleteImageAsyncTask(image.ImagePath, ct);
+        if(!string.IsNullOrEmpty(image.ThumbnailPath))
+            await _storageService.DeleteThumbnailAsyncTask(image.ThumbnailPath, ct);
 
         _dbContext.PromptVersionImages.Remove(image);
         await _dbContext.SaveChangesAsync(ct);

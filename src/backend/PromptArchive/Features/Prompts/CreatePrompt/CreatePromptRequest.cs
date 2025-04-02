@@ -14,7 +14,7 @@ public class CreatePromptRequest
     public List<string> Models { get; set; } = [];
     public List<IFormFile>? Images { get; set; }
     public string? ImageCaptionsJson { get; set; }
-    
+
     public Dictionary<string, string>? GetImageCaptions()
     {
         if (string.IsNullOrEmpty(ImageCaptionsJson))
@@ -33,7 +33,7 @@ public class CreatePromptRequest
 
 public class CreatePromptRequestValidator : Validator<CreatePromptRequest>
 {
-    public CreatePromptRequestValidator()
+    public CreatePromptRequestValidator(IConfiguration configuration)
     {
         RuleFor(x => x.Title).NotEmpty();
         RuleFor(x => x.PromptContent).NotEmpty();
@@ -45,7 +45,7 @@ public class CreatePromptRequestValidator : Validator<CreatePromptRequest>
                 if (file == null) return false;
 
                 // Check file size (e.g., 10MB max)
-                if (file.Length > 10 * 1024 * 1024) return false;
+                if (file.Length > configuration.GetValue<int>("MaxUploadSize")) return false;
 
                 // Check file type
                 var allowedTypes = new[] { "image/jpeg", "image/png", "image/gif", "image/webp" };
