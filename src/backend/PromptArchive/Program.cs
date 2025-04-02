@@ -1,5 +1,7 @@
+using System.Text.Json;
 using FastEndpoints;
 using FastEndpoints.Swagger;
+using Microsoft.AspNetCore.Authentication.OAuth;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
@@ -49,7 +51,55 @@ try
         .AddEntityFrameworkStores<ApplicationDbContext>()
         .AddDefaultTokenProviders();
 
-    builder.Services.AddAuthentication(IdentityConstants.ApplicationScheme);
+    var authBuilder = builder.Services.AddAuthentication(o =>
+    {
+        o.DefaultScheme = IdentityConstants.ApplicationScheme;
+        o.DefaultSignInScheme = IdentityConstants.ApplicationScheme;
+    });
+
+    var oauthSettings = builder.Configuration.GetSection("Authentication:OAuth").Get<OAuthSettings>();
+    if (oauthSettings is not null)
+    {
+        authBuilder.AddOAuth("Generic", options =>
+        {
+            options.ClientId = oauthSettings.ClientId;
+            options.ClientSecret = oauthSettings.ClientSecret;
+            options.CallbackPath = "/";
+
+            options.AuthorizationEndpoint = oauthSettings.AuthorizationEndpoint;
+            options.TokenEndpoint = oauthSettings.TokenEndpoint;
+            options.UserInformationEndpoint = oauthSettings.UserInfoEndpoint;
+            options.SignInScheme = IdentityConstants.ExternalScheme;
+
+            options.SaveTokens = true;
+
+            options.Events = new OAuthEvents
+            {
+                OnCreatingTicket = async context =>
+                {
+                    var request = new HttpRequestMessage(HttpMethod.Get, context.Options.UserInformationEndpoint);
+                    request.Headers.Accept.Add(
+                        new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+                    request.Headers.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", context.AccessToken);
+
+                    var response = await context.Backchannel.SendAsync(request,
+                        HttpCompletionOption.ResponseHeadersRead, context.HttpContext.RequestAborted);
+                    response.EnsureSuccessStatusCode();
+
+                    var user = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync());
+                    context.RunClaimActions(user.RootElement);
+                },
+                OnRemoteFailure = context =>
+                {
+                    context.Response.Redirect("/auth-failed");
+                    context.HandleResponse();
+                    return Task.CompletedTask;
+                }
+            };
+        });
+    }
+
     builder.Services.ConfigureApplicationCookie(o =>
     {
         o.Cookie.HttpOnly = true;
@@ -167,10 +217,7 @@ try
         await dbContext.Database.MigrateAsync();
 
         await IdentitySeeder.SeedBaseRoles(services);
-        if (environment.IsDevelopment())
-        {
-            await IdentitySeeder.SeedAdminUserAsync(services);
-        }
+        await IdentitySeeder.SeedAdminUserAsync(services);
     }
 
     await app.RunAsync();
