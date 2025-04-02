@@ -117,10 +117,13 @@
                 <TabsContent value="versions">
                     <Card>
                         <CardContent class="pt-6">
-                            <VersionList :versions="versions" :active-version-id="activeVersionId"
-                                :can-edit="canEdit"
+                            <VersionDiff v-if="showVersionComparison && oldVersion && newVersion"
+                                :old-version="oldVersion" :new-version="newVersion" @close="closeComparison"
+                                class="mb-6" />
+
+                            <VersionList :versions="versions" :active-version-id="activeVersionId" :can-edit="canEdit"
                                 @select="selectVersion" @add-images="openAddImagesModal"
-                                @delete-image="handleDeleteImage" @delete-version="handleDeleteVersion"/>
+                                @delete-image="handleDeleteImage" @delete-version="handleDeleteVersion" @compare="handleCompareVersions"/>
                         </CardContent>
                     </Card>
                 </TabsContent>
@@ -244,6 +247,7 @@ import ImageUploader from '@/components/prompt/ImageUploader.vue';
 import { usePromptStore } from '@/store/promptStore';
 import { useAuthStore } from '@/store/auth';
 import { type PromptComment } from '@/utils/promptService';
+import VersionDiff from '@/components/prompt/VersionDiff.vue';
 
 const router = useRouter();
 const route = useRoute();
@@ -258,6 +262,8 @@ const showDeleteDialog = ref(false);
 const showDeleteCommentDialog = ref(false);
 const commentToDelete = ref<PromptComment | null>(null);
 const currentTab = ref('versions');
+const showVersionComparison = ref(false);
+const comparisonVersions = ref<{ old: string, new: string } | null>(null);
 
 const showAddImagesModal = ref(false);
 const selectedVersionId = ref('');
@@ -274,6 +280,16 @@ const isLoading = computed(() => promptStore.isLoading);
 const isAuthenticated = computed(() => authStore.isAuthenticated);
 const currentUserId = computed(() => authStore.user?.id);
 const isAdmin = computed(() => authStore.user?.roles?.includes('Admin') ?? false);
+
+const oldVersion = computed(() => {
+    if (!comparisonVersions.value) return null;
+    return versions.value.find(v => v.id === comparisonVersions.value?.old) || null;
+});
+const newVersion = computed(() => {
+    if (!comparisonVersions.value) return null;
+    return versions.value.find(v => v.id === comparisonVersions.value?.new) || null;
+});
+
 
 const canEdit = computed(() => {
     if (!prompt.value || !isAuthenticated.value) return false;
@@ -292,6 +308,19 @@ onMounted(async () => {
 watch(promptId, async () => {
     await loadPromptData();
 });
+
+function handleCompareVersions(oldVersionId: string, newVersionId: string) {
+    comparisonVersions.value = {
+        old: oldVersionId,
+        new: newVersionId
+    };
+    showVersionComparison.value = true;
+}
+
+function closeComparison() {
+    showVersionComparison.value = false;
+    comparisonVersions.value = null;
+}
 
 async function loadPromptData() {
     if (!promptId.value) return;

@@ -20,6 +20,7 @@ RUN dotnet publish PromptArchive.sln -c Release -o out
 
 # Stage 3: Runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
+RUN apt-get update && apt-get install -y libfontconfig1 libice6 libsm6
 WORKDIR /app
 
 # Copy the published backend

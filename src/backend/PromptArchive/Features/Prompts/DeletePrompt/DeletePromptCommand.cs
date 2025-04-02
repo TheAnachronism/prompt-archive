@@ -38,6 +38,8 @@ public class DeletePromptCommandHandler : ICommandHandler<DeletePromptCommand, R
             try
             {
                 await _storageService.DeleteImageAsyncTask(image.ImagePath, ct);
+                if(!string.IsNullOrEmpty(image.ThumbnailPath))
+                    await _storageService.DeleteThumbnailAsyncTask(image.ThumbnailPath, ct);
                 _dbContext.PromptVersionImages.Remove(image);
             }
             catch (Exception ex)
