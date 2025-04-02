@@ -74,7 +74,7 @@ onMounted(async () => {
   }
 });
 
-async function updatePrompt(data: { title: string; description: string; content: string; tags: string[]; models: string[] }) {
+async function updatePrompt(data: { title: string; description: string; promptContent: string; tags: string[]; models: string[] }) {
   if (!promptId.value) return;
 
   try {

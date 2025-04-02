@@ -41,7 +41,7 @@ if (!isAuthenticated.value) {
   router.push('/login');
 }
 
-async function createPrompt(data: { title: string; description: string; promptContent: string; tags: string[]; models: string[]; images: File[]; imageCaptions: Record<string, string> }) {
+async function createPrompt(data: { title: string; description: string; promptContent: string; tags: string[]; models: string[]; }) {
   try {
     const newPrompt = await promptStore.createPrompt(data);
     toast({
