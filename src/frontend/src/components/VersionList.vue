@@ -54,7 +54,7 @@
                         @delete="(imageId: string) => $emit('delete-image', imageId, version.promptId)" @set-thumbnail="(imageId: string) => $emit('set-thumbnail', imageId, version.promptId)" />
                 </div>
 
-                <div v-if="canEdit" class="flex justify-end">
+                <div v-if="canEdit" class="flex justify-end gap-2">
                     <Button v-if="version.versionNumber > 1" variant="destructive" size="sm"
                         @click="$emit('delete-version', version.id)">
                         <PlusIcon class="h-4 w-4 mr-1" />

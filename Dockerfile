@@ -1,24 +1,19 @@
-# Stage 1: Build the Vue.js frontend
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS backend-build
+WORKDIR /app/backend
+
+COPY src/backend/ ./
+RUN dotnet restore PromptArchive.sln
+RUN dotnet publish PromptArchive.sln -c Release -o out
+
 FROM node:23-alpine AS frontend-build
 WORKDIR /app/frontend
 
-# Copy frontend files
 COPY src/frontend/package*.json ./
 RUN npm ci
 
 COPY src/frontend/ ./
 RUN npm run build
 
-# Stage 2: Build the .NET backend
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS backend-build
-WORKDIR /app/backend
-
-# Copy backend files
-COPY src/backend/ ./
-RUN dotnet restore PromptArchive.sln
-RUN dotnet publish PromptArchive.sln -c Release -o out
-
-# Stage 3: Runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:9.0
 RUN apt-get update && apt-get install -y libfontconfig1 libice6 libsm6
 WORKDIR /app
